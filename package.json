@@ -1,0 +1,32 @@
+{
+  "name": "newsletter-builder",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  },
+  "dependencies": {
+    "@editorjs/checklist": "^1.6.0",
+    "@editorjs/editorjs": "^2.31.0",
+    "@editorjs/header": "^2.8.8",
+    "@editorjs/list": "^2.0.9",
+    "@editorjs/paragraph": "^2.11.7",
+    "@emailjs/browser": "^4.4.1",
+    "@react-oauth/google": "^0.13.4",
+    "@vitejs/plugin-react": "^5.1.2",
+    "cors": "^2.8.5",
+    "dompurify": "^3.3.1",
+    "editorjs-text-color-plugin": "^2.0.4",
+    "express": "^5.2.1",
+    "lucide-react": "^0.562.0",
+    "nodemailer": "^7.0.12",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sanitize-html": "^2.17.0"
+  }
+}
