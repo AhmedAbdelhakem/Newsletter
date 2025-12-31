@@ -1,6 +1,6 @@
 # Newsletter Builder 📧
 
-A powerful, drag-and-drop newsletter builder built with **React** and **Editor.js**. Design responsive, email-ready HTML templates with advanced layout capabilities and real-time preview, then export or send test emails directly.
+A powerful, drag-and-drop newsletter builder built with **React** and **Editor.js**. Design responsive, email-ready HTML templates with advanced layout capabilities, global styling options, and real-time preview, then export or send test emails directly.
 
 ![Newsletter Builder Preview]
 
@@ -8,24 +8,24 @@ A powerful, drag-and-drop newsletter builder built with **React** and **Editor.j
 
 *   **Drag & Drop Interface**: Intuitive block-based editor powered by [Editor.js](https://editorjs.io/).
 *   **Rich Content Blocks**:
-    *   **Text & Headings**: Rich text formatting.
+    *   **Text & Headings**: Rich text formatting with custom typography.
     *   **Images**: Custom width, border radius, and shadow controls.
+    *   **Videos**: Embed video files (mp4, webm) with poster images.
     *   **Buttons**: Fully customizable colors, padding, radius, alignment, and full-width options.
-    *   **Divider & Spacer**: Layout utilities.
+    *   **Divider & Spacer**: Layout utilities for spacing and separation.
 *   **Advanced Layout System**:
-    *   **Rows**: Full-width sections with background color and padding support.
+    *   **Rows**: Full-width sections with background color/image/video and padding support.
     *   **Columns**: 2 or 3 column layouts.
-    *   **Nested Layouts**: Create columns **inside** columns for complex grids.
-*   **Styling & Customization**:
-    *   Real-time control over background colors, text colors, padding, and border radius.
-    *   Responsive design (mobile-optimized output).
-*   **Email Testing**:
-    *   Integrated test email sending via **Nodemailer**.
-    *   Supports **Ethereal Email** (default, zero-config) and **Gmail SMTP**.
-*   **Live Preview & Export**:
-    *   Instant HTML preview.
-    *   One-click Export to HTML file.
-    *   Copy HTML to clipboard.
+    *   **Nested Layouts**: Create rows and columns **inside** columns for complex grids.
+*   **Global Styling & Theming**:
+    *   **Page Background**: Set a global background color, image, or video for the email outer wrapper.
+    *   **Content Background**: Set a specific background for the email content card.
+    *   **Dark Mode Support**: Enable dark mode and define custom dark-themed colors (Page, Content, Text) to ensure perfect rendering in dark-mode clients.
+*   **Live Preview, Export & Testing**:
+    *   **Instant Preview**: See your changes in real-time.
+    *   **Export HTML**: Download the production-ready HTML file.
+    *   **Copy Code**: One-click button to copy HTML to clipboard.
+    *   **Email Testing**: Integrated integration with **Nodemailer** to send test emails to Ethereal (fake inbox) or Gmail.
 
 ## 🛠️ Tech Stack
 
@@ -46,13 +46,17 @@ A powerful, drag-and-drop newsletter builder built with **React** and **Editor.j
 │   ├── blocks/           # Custom Editor.js Block Components
 │   │   ├── ButtonBlock.js
 │   │   ├── ColumnsBlock.js  # Handles Rows, Columns, and Nested Layouts
+│   │   ├── DividerBlock.js
 │   │   ├── ImageUrlBlock.js
-│   │   └── ...
+│   │   ├── SpacerBlock.js
+│   │   └── VideoBlock.js    # Video embedding block
 │   ├── components/       # React UI Components
 │   │   ├── BlockPalette.jsx # Sidebar with drag-and-drop blocks
 │   │   ├── Editor.jsx       # Editor.js wrapper & configuration
+│   │   ├── PageSettings.jsx # Global Style & Dark Mode settings panel
 │   │   ├── Preview.jsx      # Live HTML preview
-│   │   └── SendTestModal.jsx # Email testing UI
+│   │   ├── Toolbar.jsx      # Bottom toolbar (Export/Copy/Reset)
+│   │   └── SendTestModal.jsx
 │   ├── utils/
 │   │   └── emailRenderer.js # Converts Editor data to Email-safe HTML table layout
 │   ├── App.jsx           # Main application layout
@@ -96,7 +100,7 @@ node email-server.mjs
 
 ## 📧 Email Configuration
 
-The application uses **Ethereal Email** by default, which creates a fake inbox for every test email sent—perfect for development without spamming real accounts.
+The application uses **Ethereal Email** by default, which creates a fake inbox for every test email sent—perfect for development without spamming real accounts. The link to the fake inbox is logged in the browser console and server terminal.
 
 To send real emails via **Gmail**, create a `.env` file (or set environment variables) with:
 
@@ -109,14 +113,19 @@ GMAIL_APP_PASSWORD=your-google-app-password
 ## 📖 Usage Guide
 
 1.  **Add Blocks**: Drag items from the **Blocks** palette on the left into the Editor area.
-2.  **Create Layouts**:
-    *   Drag a **Row** block for a full-width section.
+2.  **Global Styles**: Click the **"Global Style"** tab in the sidebar to set:
+    *   Page Background (Outer area)
+    *   Content Background (Inner card)
+    *   Dark Mode Colors
+3.  **Create Layouts**:
     *   Drag a **Columns** block for side-by-side content.
     *   **Customize**: Click the gear/settings icons on blocks to adjust padding, background colors, and alignment.
     *   **Nest**: Inside a column, click "Add Item" and select **"Row"** to create a nested grid.
-3.  **Preview**: Check the **Preview** pane on the right to see how it looks.
-4.  **Send Test**: Click **"Send Test"** in the Preview pane, enter an email, and check your inbox (or the Ethereal link returned).
-5.  **Export**: Click **"Export HTML"** at the bottom to download the final HTML file ready for your ESP (Mailchimp, Sender.net, etc.).
+4.  **Preview**: Check the **Preview** pane on the right to see how it looks.
+5.  **Send Test**: Click **"Send Test"** in the Preview pane, enter an email, and check your inbox (or the Ethereal link returned).
+6.  **Export**:
+    *   **Export HTML**: Download the file.
+    *   **Copy HTML**: Copy the code to clipboard.
 
 ## 🧩 Modifying & Extending
 
@@ -125,4 +134,3 @@ GMAIL_APP_PASSWORD=your-google-app-password
 
 ---
 *Built with ❤️ using React & Editor.js*
-# Newsletter
