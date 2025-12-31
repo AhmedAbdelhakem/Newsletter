@@ -2,7 +2,7 @@
 
 A powerful, drag-and-drop newsletter builder built with **React** and **Editor.js**. Design responsive, email-ready HTML templates with advanced layout capabilities and real-time preview, then export or send test emails directly.
 
-![Newsletter Builder Preview](./screenshot.png)
+![Newsletter Builder Preview]
 
 ## 🚀 Key Features
 
