@@ -15,6 +15,7 @@ import ButtonBlock from '../blocks/ButtonBlock';
 import DividerBlock from '../blocks/DividerBlock';
 import SpacerBlock from '../blocks/SpacerBlock';
 import ColumnsBlock from '../blocks/ColumnsBlock';
+import LinkToolBlock from '../blocks/LinkToolBlock';
 import AlignmentTune from '../tunes/AlignmentTune';
 import TypographyTune from '../tunes/TypographyTune';
 
@@ -85,6 +86,9 @@ function Editor({ onChange }) {
                         title: 'Row',
                         icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>'
                     }
+                },
+                linkTool: {
+                    class: LinkToolBlock,
                 },
                 alignmentTune: {
                     class: AlignmentTune,
@@ -202,6 +206,8 @@ function Editor({ onChange }) {
                 return {};
             case 'spacer':
                 return { height: 32 };
+            case 'linkTool':
+                return { link: '', meta: {} };
             default:
                 return {};
         }

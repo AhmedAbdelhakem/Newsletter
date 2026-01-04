@@ -379,15 +379,73 @@ function renderLinkPreview(data, block) {
     const description = sanitize(data.meta?.description || '');
     const href = data.link || '#';
     const imageUrl = data.meta?.image?.url;
-    const imageCell = imageUrl
-        ? `<td style="width:96px;padding:12px 0 12px 24px;"><img src="${imageUrl}" alt="" style="display:block;width:72px;height:72px;object-fit:cover;border-radius:8px;border:0;"></td>`
-        : '';
-    const contentCell = `<td style="${applyAlignmentStyle(`${TD_BASE} padding:12px 24px;`, block)}">
-      <p style="margin:0 0 6px 0;font-family:Arial;font-size:15px;font-weight:bold;color:#111827;">${title}</p>
-      ${description ? `<p style="margin:0 0 8px 0;font-family:Arial;font-size:14px;color:#4b5563;line-height:1.5;">${description}</p>` : ''}
-      <a href="${href}" style="font-family:Arial;font-size:14px;color:#2563eb;text-decoration:underline;">${href}</a>
-    </td>`;
-    return `<table role="presentation" width="100%"><tr>${imageCell}${contentCell}</tr></table>`;
+
+    // Default styles if not present
+    const s = data.style || {
+        display: 'row',
+        backgroundColor: '#ffffff',
+        borderColor: '#e1e3e6',
+        borderRadius: '6',
+        borderWidth: '1',
+        padding: '0',
+        titleColor: '#111827',
+        titleFontSize: '16',
+        descColor: '#6b7280',
+        descFontSize: '14',
+        imageRadius: '6'
+    };
+
+    const isColumn = s.display === 'column';
+
+    // Container Table Styles
+    // For column layout, we might want fewer internal table complications, but standardizing as a table is good.
+    const containerStyle = `border:${s.borderWidth}px solid ${s.borderColor};border-radius:${s.borderRadius}px;background-color:${s.backgroundColor};overflow:hidden;width:100%;`;
+
+    let contentHtml = '';
+
+    if (isColumn) {
+        // Vertical Layout (Column)
+        // Row 1: Image (if exists)
+        if (imageUrl) {
+            contentHtml += `
+                <tr>
+                    <td style="width:100%;padding:0;">
+                         <img src="${imageUrl}" alt="" style="display:block;width:100%;height:auto;border-top-left-radius:${s.borderRadius}px;border-top-right-radius:${s.borderRadius}px;border:0;">
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Row 2: Content
+        const contentPadding = imageUrl ? '12px' : `${s.padding}px`;
+        contentHtml += `
+            <tr>
+                <td style="${applyAlignmentStyle(`${TD_BASE} padding:${contentPadding};width:100%;`, block)}">
+                  <a href="${href}" style="text-decoration:none;display:block;">
+                    <span style="display:block;margin:0 0 4px 0;font-family:Arial;font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
+                    ${description ? `<span style="display:block;margin:0;font-family:Arial;font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
+                  </a>
+                </td>
+            </tr>
+        `;
+
+    } else {
+        // Horizontal Layout (Row) - Original Style
+        const imgCell = imageUrl
+            ? `<td style="width:80px;padding:12px;"><img src="${imageUrl}" alt="" style="display:block;width:80px;height:80px;object-fit:cover;border-radius:${s.imageRadius}px;border:0;"></td>`
+            : '';
+
+        const contentCell = `<td style="${applyAlignmentStyle(`${TD_BASE} padding:12px 12px 12px 0;vertical-align:middle;`, block)}">
+          <a href="${href}" style="text-decoration:none;display:block;">
+            <span style="display:block;margin:0 0 4px 0;font-family:Arial;font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
+            ${description ? `<span style="display:block;margin:0;font-family:Arial;font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
+          </a>
+        </td>`;
+
+        contentHtml = `<tr>${imgCell}${contentCell}</tr>`;
+    }
+
+    return `<table role="presentation" width="100%" style="${containerStyle}"cellpadding="0" cellspacing="0">${contentHtml}</table>`;
 }
 
 
@@ -446,14 +504,40 @@ const blockRenderers = {
             const muted = data.muted ? 'muted' : '';
             const controls = 'controls'; // Always include controls as fallback
 
-            content = `<video width="${width}%" style="display:block;max-width:100%;height:auto;border-radius:${borderRadius}px;border:${border};box-shadow:${shadow};" ${autoplay} ${loop} ${muted} ${controls}>
+            // Use posterUrl as fallback image for email clients that strip video tags (Gmail, Outlook)
+            // If no poster is provided, we can't show a meaningful fallback
+            const posterUrl = data.posterUrl || '';
+            const fallbackImg = posterUrl
+                ? `<img src="${posterUrl}" alt="${alt}" style="display:block;width:100%;height:auto;border-radius:${borderRadius}px;">`
+                : `<span style="color:#666;font-family:Arial,sans-serif;">Video: ${alt}</span>`;
+
+            content = `<video width="${width}%" style="display:block;max-width:100%;height:auto;border-radius:${borderRadius}px;border:${border};box-shadow:${shadow};" ${autoplay} ${loop} ${muted} ${controls} poster="${posterUrl}">
                 <source src="${data.url}" type="video/${data.url.split('.').pop()}">
-                <img src="${data.url}" alt="${alt}" style="display:block;width:100%;height:auto;border-radius:${borderRadius}px;">
-                Your browser does not support the video tag.
+                ${fallbackImg}
             </video>`;
         } else {
-            // It's an image/SVG/GIF
-            content = `<img src="${data.url}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">`;
+            // Check for YouTube URL
+            const getYouTubeId = (url) => {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url?.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            };
+            const youtubeId = getYouTubeId(data.url);
+
+            if (youtubeId) {
+                // YouTube: Render as clickable thumbnail link (Best practice for email)
+                // Matches user request: <a href="..."><img src="..." /></a>
+                const thumbnailUrl = data.posterUrl || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+
+                content = `
+                    <a href="${data.url}" target="_blank" style="display:block;text-decoration:none;">
+                        <img src="${thumbnailUrl}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">
+                    </a>
+                `;
+            } else {
+                // Regular image/SVG/GIF
+                content = `<img src="${data.url}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">`;
+            }
         }
 
         return wrapRow(`<table role="presentation" width="100%"><tr><td align="${alignment}" style="${TD_BASE} padding:16px 24px;">${content}</td></tr></table>`);

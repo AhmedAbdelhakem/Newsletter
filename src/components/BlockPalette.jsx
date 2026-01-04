@@ -10,6 +10,7 @@ const BLOCK_TYPES = [
   { id: 'button', name: 'Button', icon: MousePointer, color: '#f59e0b' },
   { id: 'row', name: 'Row', icon: AlignJustify, color: '#ec4899' },
   { id: 'columns', name: 'Columns', icon: Columns, color: '#3b82f6' },
+  { id: 'linkTool', name: 'Link Preview', icon: Link, color: '#f43f5e' },
   { id: 'divider', name: 'Divider', icon: Minus, color: '#64748b' },
   { id: 'spacer', name: 'Spacer', icon: ArrowUpDown, color: '#94a3b8' },
 ];

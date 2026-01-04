@@ -1,5 +1,6 @@
 const defaultState = {
     url: '',
+    posterUrl: '', // Fallback image for email clients that don't support video (like Gmail)
     alt: 'Video',
     width: '100',
     alignment: 'center',
@@ -52,11 +53,21 @@ export default class VideoBlock {
             this.updatePreview();
         });
 
+        // Poster URL - REQUIRED for Gmail/Outlook fallback (these clients don't support video)
+        const posterInput = this.createInput('Poster Image URL (Gmail fallback)', 'url', this.data.posterUrl || '', 'https://example.com/poster.jpg', value => {
+            this.data.posterUrl = value;
+        });
+
         const altInput = this.createInput('Alt Text', 'text', this.data.alt, 'Description', value => {
             this.data.alt = value;
         });
 
-        urlSection.append(urlInput, altInput);
+        // Info box explaining poster importance
+        const infoBox = document.createElement('div');
+        infoBox.style.cssText = 'background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; padding: 8px 10px; font-size: 11px; color: #1e40af; margin-top: 4px;';
+        infoBox.innerHTML = 'ℹ️ <strong>Gmail/Outlook strip video tags.</strong> Add a poster image URL so those users see an image instead of a broken icon.';
+
+        urlSection.append(urlInput, posterInput, infoBox, altInput);
 
         // Style Settings Panel
         const stylePanel = document.createElement('div');

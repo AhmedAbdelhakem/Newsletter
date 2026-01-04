@@ -58,6 +58,64 @@ async function setupTransporter() {
     }
 }
 
+app.get('/api/fetch-url-metadata', async (req, res) => {
+    try {
+        const { url } = req.query;
+
+        if (!url) {
+            return res.status(400).json({ success: 0, error: 'URL is required' });
+        }
+
+        console.log('🔍 Fetching metadata for:', url);
+
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; NewsletterBot/1.0; +http://localhost:3000)'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+        }
+
+        const html = await response.text();
+
+        // Simple Regex Parsing for OG Tags
+        const getMetaTag = (name) => {
+            const regex = new RegExp(`<meta\\s+(?:name|property)=["'](?:og:)?${name}["']\\s+content=["'](.*?)["']`, 'i');
+            const match = html.match(regex);
+            return match ? match[1] : '';
+        };
+
+        const title = getMetaTag('title') ||
+            (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]) ||
+            'No title';
+
+        const description = getMetaTag('description');
+        const image = getMetaTag('image');
+
+        res.json({
+            success: 1,
+            link: url,
+            meta: {
+                title,
+                description,
+                image: {
+                    url: image
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Metadata fetch error:', error.message);
+        res.json({
+            success: 0,
+            link: req.query.url,
+            meta: {}
+        });
+    }
+});
+
 app.post('/api/send-test', async (req, res) => {
     try {
         const { to, subject, html } = req.body;
