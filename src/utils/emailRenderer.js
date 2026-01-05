@@ -277,6 +277,14 @@ function renderColumnItem(item) {
             const linkColor = item.color || '#6366f1';
             return `<div style="margin:0 0 12px 0;"><a href="${linkUrl}" style="font-family:Arial;font-size:15px;color:${linkColor};text-decoration:underline;">${linkText}</a></div>`;
 
+        case 'linkPreview':
+            // Re-use renderLinkPreview. It uses block for alignment but we can pass null or mimic needed props if necessary.
+            // applyAlignmentStyle checks block?.tunes?.alignmentTune?.alignment
+            // For column items, we don't have block tunes. applyAlignmentStyle defaults to 'left'.
+            // If we want alignment on link preview inside columns, we'd need to add alignment to the item data schema and Mock the block object.
+            // For now, let's just pass null.
+            return `<div style="margin:0 0 12px 0;">${renderLinkPreview(item, null)}</div>`;
+
         case 'row':
             return renderGrid(item, true);
 

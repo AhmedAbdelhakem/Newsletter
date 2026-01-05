@@ -1,5 +1,5 @@
 
-const CONTENT_TYPES = ['text', 'button', 'image', 'link', 'row'];
+const CONTENT_TYPES = ['text', 'button', 'image', 'link', 'linkPreview', 'row'];
 
 const defaultState = {
   columns: 2,
@@ -282,6 +282,195 @@ export default class ColumnsBlock {
         typoControls.appendChild(colorWrapper);
 
         container.appendChild(typoControls);
+        break;
+
+      case 'linkPreview':
+        // State for local view management (Input vs Preview vs Edit)
+        // We use a container that we will empty and refill based on state
+        const lpContainer = document.createElement('div');
+        lpContainer.style.cssText = 'display:flex; flex-direction:column; gap:8px;';
+
+        const renderLP = () => {
+          lpContainer.innerHTML = '';
+
+          // Check if we have data to show preview
+          if (item.link && item.meta && item.meta.title) {
+            renderLPPreview();
+          } else {
+            renderLPInput();
+          }
+        };
+
+        const renderLPInput = () => {
+          const input = document.createElement('input');
+          input.placeholder = 'Paste link URL...';
+          input.value = item.link || '';
+          input.style.cssText = 'width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #e5e7eb; border-radius: 6px;';
+
+          const handleUrl = async (url) => {
+            if (!url) return;
+            lpContainer.innerHTML = '<div style="font-size:12px;color:#6b7280;">Fetching metadata...</div>';
+            try {
+              const response = await fetch(`http://localhost:3001/api/fetch-url-metadata?url=${encodeURIComponent(url)}`);
+              const result = await response.json();
+              if (result.success) {
+                update('link', url);
+                update('meta', result.meta);
+                // Default style if not exists
+                if (!item.style) {
+                  update('style', {
+                    display: 'row',
+                    backgroundColor: '#ffffff',
+                    borderColor: '#e1e3e6',
+                    borderRadius: '6',
+                    borderWidth: '1',
+                    padding: '0',
+                    titleColor: '#111827',
+                    titleFontSize: '14', // Slightly smaller default for columns
+                    descColor: '#6b7280',
+                    descFontSize: '12',
+                    imageRadius: '6'
+                  });
+                }
+                renderLP();
+              } else {
+                // Fallback to basic link or error? Just go back to input
+                renderLPInput();
+                const inp = lpContainer.querySelector('input');
+                if (inp) { inp.value = url; inp.style.borderColor = 'red'; }
+              }
+            } catch (e) {
+              console.error(e);
+              renderLPInput();
+            }
+          };
+
+          input.addEventListener('paste', (e) => {
+            const url = (e.clipboardData || window.clipboardData).getData('text');
+            handleUrl(url);
+          });
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleUrl(input.value);
+          });
+
+          lpContainer.appendChild(input);
+        };
+
+        const renderLPPreview = () => {
+          const s = item.style || {};
+          const isColumn = s.display === 'column';
+
+          const preview = document.createElement('div');
+          preview.style.cssText = `border:${s.borderWidth}px solid ${s.borderColor}; border-radius:${s.borderRadius}px; background:${s.backgroundColor}; padding:${s.padding}px; overflow:hidden; display:flex; flex-direction:${isColumn ? 'column' : 'row'}; align-items:${isColumn ? 'flex-start' : 'center'}; position:relative;`;
+
+          // Image
+          if (item.meta.image && item.meta.image.url) {
+            const imgWrapper = document.createElement('div');
+            if (isColumn) {
+              imgWrapper.style.cssText = `width:100%; margin-bottom:12px;`;
+              imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; border-radius:${s.imageRadius}px; display:block;">`;
+            } else {
+              imgWrapper.style.cssText = `width:60px; height:60px; flex-shrink:0; background:#f4f5f7; margin:10px; border-radius:${s.imageRadius}px; overflow:hidden;`;
+              imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; height:100%; object-fit:cover;">`;
+            }
+            preview.appendChild(imgWrapper);
+          }
+
+          // Content
+          const content = document.createElement('div');
+          content.style.cssText = isColumn
+            ? `padding:0 10px 10px 10px; width:100%;`
+            : `padding:10px 12px 10px 0; flex-grow:1; min-width:0;`;
+
+          content.innerHTML = `
+                <div style="font-weight:700; font-size:${s.titleFontSize}px; color:${s.titleColor}; margin-bottom:4px; line-height:1.3;">${item.meta.title || item.link}</div>
+                ${item.meta.description ? `<div style="font-size:${s.descFontSize}px; color:${s.descColor}; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; webkit-box-orient:vertical; overflow:hidden;">${item.meta.description}</div>` : ''}
+             `;
+          preview.appendChild(content);
+
+          // Edit Button
+          const editBtn = document.createElement('button');
+          editBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+          editBtn.style.cssText = 'position:absolute; top:4px; right:4px; background:white; border:1px solid #e5e7eb; border-radius:4px; padding:3px; cursor:pointer; color:#6b7280; box-shadow:0 1px 2px rgba(0,0,0,0.05);';
+          editBtn.onclick = (e) => { e.stopPropagation(); renderLPEdit(); };
+
+          preview.appendChild(editBtn);
+          lpContainer.appendChild(preview);
+        };
+
+        let activeTab = 'content';
+
+        const renderLPEdit = () => {
+          lpContainer.innerHTML = '';
+
+          // Tabs
+          const tabs = document.createElement('div');
+          tabs.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; border-bottom:1px solid #e5e7eb; padding-bottom:6px;';
+
+          const renderForm = () => {
+            formContainer.innerHTML = '';
+            if (activeTab === 'content') {
+              formContainer.append(
+                this.createInput('Title', 'text', item.meta.title || '', v => update('meta', { ...item.meta, title: v })),
+                this.createInput('Desc', 'text', item.meta.description || '', v => update('meta', { ...item.meta, description: v })),
+                this.createInput('Image', 'url', item.meta.image?.url || '', v => update('meta', { ...item.meta, image: { ...(item.meta.image || {}), url: v } }))
+              );
+            } else {
+              // Style
+              const layoutRow = document.createElement('div');
+              layoutRow.append(this.createSelectInput('Layout', item.style?.display || 'row', [{ value: 'row', label: 'Row' }, { value: 'column', label: 'Column' }], v => update('style', { ...(item.style || {}), display: v })));
+              formContainer.appendChild(layoutRow);
+
+              const grid = document.createElement('div');
+              grid.style.cssText = 'display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;';
+
+              const s = item.style || {};
+              const updateStyle = (k, v) => update('style', { ...s, [k]: v });
+
+              grid.append(
+                this.createColorInput('BG', s.backgroundColor, v => updateStyle('backgroundColor', v)),
+                this.createColorInput('Border', s.borderColor, v => updateStyle('borderColor', v)),
+                this.createRangeInput('B. Width', s.borderWidth, 'px', 0, 10, v => updateStyle('borderWidth', v)),
+                this.createRangeInput('Radius', s.borderRadius, 'px', 0, 20, v => updateStyle('borderRadius', v)),
+                this.createRangeInput('Pad', s.padding, 'px', 0, 30, v => updateStyle('padding', v)),
+                this.createRangeInput('Img Rad', s.imageRadius, 'px', 0, 20, v => updateStyle('imageRadius', v)),
+                this.createRangeInput('Title Sz', s.titleFontSize, 'px', 10, 30, v => updateStyle('titleFontSize', v)),
+                this.createColorInput('Title', s.titleColor, v => updateStyle('titleColor', v)),
+                this.createRangeInput('Desc Sz', s.descFontSize, 'px', 10, 24, v => updateStyle('descFontSize', v)),
+                this.createColorInput('Desc', s.descColor, v => updateStyle('descColor', v))
+              );
+              formContainer.appendChild(grid);
+            }
+          };
+
+          ['content', 'style'].forEach(t => {
+            const btn = document.createElement('button');
+            btn.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+            btn.style.cssText = `border:none; background:none; cursor:pointer; font-size:12px; font-weight:600; color:${activeTab === t ? '#2563eb' : '#6b7280'};`;
+            btn.type = 'button'; // Prevent form submission if any
+            btn.onclick = (e) => {
+              e.stopPropagation(); // Stop bubbling
+              activeTab = t;
+              renderLPEdit();
+            };
+            tabs.appendChild(btn);
+          });
+
+          const formContainer = document.createElement('div');
+          formContainer.style.cssText = 'display:flex; flex-direction:column; gap:8px;';
+          renderForm();
+
+          const doneBtn = document.createElement('button');
+          doneBtn.textContent = 'Done';
+          doneBtn.type = 'button';
+          doneBtn.style.cssText = 'margin-top:8px; padding:4px 12px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px; align-self:flex-end;';
+          doneBtn.onclick = (e) => { e.stopPropagation(); renderLP(); };
+
+          lpContainer.append(tabs, formContainer, doneBtn);
+        };
+
+        renderLP();
+        container.appendChild(lpContainer);
         break;
 
       case 'row':
@@ -603,6 +792,7 @@ export default class ColumnsBlock {
       button: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="8" rx="2"/></svg>',
       image: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
       link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+      linkPreview: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>', // Placeholder icon, maybe similar to linkTool
       row: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>'
     };
     return icons[type] || '';
@@ -645,6 +835,25 @@ export default class ColumnsBlock {
         };
       case 'link':
         return { type: 'link', text: 'Click here', url: 'https://', color: '#6366f1' };
+      case 'linkPreview':
+        return {
+          type: 'linkPreview',
+          link: '',
+          meta: {},
+          style: {
+            display: 'row',
+            backgroundColor: '#ffffff',
+            borderColor: '#e1e3e6',
+            borderRadius: '6',
+            borderWidth: '1',
+            padding: '0',
+            titleColor: '#111827',
+            titleFontSize: '14',
+            descColor: '#6b7280',
+            descFontSize: '12',
+            imageRadius: '6'
+          }
+        };
       default:
         return { type: 'text', value: '' };
     }
