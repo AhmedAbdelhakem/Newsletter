@@ -128,7 +128,7 @@ app.post('/api/send-test', async (req, res) => {
         if (!transporter) await setupTransporter();
 
         const info = await transporter.sendMail({
-            from: (GMAIL_USER && GMAIL_USER.trim()) ? `"Newsletter Builder" <${GMAIL_USER.trim()}>` : '"Newsletter Builder" <test@example.com>',
+            from: `"Newsletter Builder" <${(GMAIL_USER && GMAIL_USER.includes('@')) ? GMAIL_USER.trim() : 'test@example.com'}>`,
             to,
             subject: subject || 'Newsletter Test',
             html,
