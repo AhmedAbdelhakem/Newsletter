@@ -23,7 +23,7 @@ function SendTestModal({ html, onClose }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/send-test', {
+      const response = await fetch('/api/send-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

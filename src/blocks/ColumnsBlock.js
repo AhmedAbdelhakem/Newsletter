@@ -311,7 +311,7 @@ export default class ColumnsBlock {
             if (!url) return;
             lpContainer.innerHTML = '<div style="font-size:12px;color:#6b7280;">Fetching metadata...</div>';
             try {
-              const response = await fetch(`http://localhost:3001/api/fetch-url-metadata?url=${encodeURIComponent(url)}`);
+              const response = await fetch(`/api/fetch-url-metadata?url=${encodeURIComponent(url)}`);
               const result = await response.json();
               if (result.success) {
                 update('link', url);

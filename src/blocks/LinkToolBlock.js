@@ -87,7 +87,7 @@ export default class LinkToolBlock {
         this.wrapper.innerHTML = '<div class="cdx-loader">Fetching...</div>';
 
         try {
-            const response = await fetch(`http://localhost:3001/api/fetch-url-metadata?url=${encodeURIComponent(url)}`);
+            const response = await fetch(`/api/fetch-url-metadata?url=${encodeURIComponent(url)}`);
             const result = await response.json();
 
             if (result.success) {
