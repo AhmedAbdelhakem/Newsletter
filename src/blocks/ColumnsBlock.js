@@ -329,7 +329,8 @@ export default class ColumnsBlock {
                     titleFontSize: '14', // Slightly smaller default for columns
                     descColor: '#6b7280',
                     descFontSize: '12',
-                    imageRadius: '6'
+                    imageRadius: '6',
+                    imageSize: '80'
                   });
                 }
                 renderLP();
@@ -358,19 +359,21 @@ export default class ColumnsBlock {
 
         const renderLPPreview = () => {
           const s = item.style || {};
-          const isColumn = s.display === 'column';
+          const isColumn = s.display === 'column' || s.display === 'column-reverse';
 
           const preview = document.createElement('div');
-          preview.style.cssText = `border:${s.borderWidth}px solid ${s.borderColor}; border-radius:${s.borderRadius}px; background:${s.backgroundColor}; padding:${s.padding}px; overflow:hidden; display:flex; flex-direction:${isColumn ? 'column' : 'row'}; align-items:${isColumn ? 'flex-start' : 'center'}; position:relative;`;
+          preview.style.cssText = `border:${s.borderWidth}px solid ${s.borderColor}; border-radius:${s.borderRadius}px; background:${s.backgroundColor}; padding:${s.padding}px; overflow:hidden; display:flex; flex-direction:${s.display}; align-items:${isColumn ? 'flex-start' : 'center'}; position:relative;`;
 
           // Image
           if (item.meta.image && item.meta.image.url) {
             const imgWrapper = document.createElement('div');
+            const imgSize = s.imageSize ? `${s.imageSize}px` : (isColumn ? '100%' : '60px');
+
             if (isColumn) {
               imgWrapper.style.cssText = `width:100%; margin-bottom:12px;`;
               imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; border-radius:${s.imageRadius}px; display:block;">`;
             } else {
-              imgWrapper.style.cssText = `width:60px; height:60px; flex-shrink:0; background:#f4f5f7; margin:10px; border-radius:${s.imageRadius}px; overflow:hidden;`;
+              imgWrapper.style.cssText = `width:${imgSize}; height:${imgSize}; flex-shrink:0; background:#f4f5f7; margin:10px; border-radius:${s.imageRadius}px; overflow:hidden;`;
               imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; height:100%; object-fit:cover;">`;
             }
             preview.appendChild(imgWrapper);
@@ -416,9 +419,13 @@ export default class ColumnsBlock {
                 this.createInput('Image', 'url', item.meta.image?.url || '', v => update('meta', { ...item.meta, image: { ...(item.meta.image || {}), url: v } }))
               );
             } else {
-              // Style
               const layoutRow = document.createElement('div');
-              layoutRow.append(this.createSelectInput('Layout', item.style?.display || 'row', [{ value: 'row', label: 'Row' }, { value: 'column', label: 'Column' }], v => update('style', { ...(item.style || {}), display: v })));
+              layoutRow.append(this.createSelectInput('Layout', item.style?.display || 'row', [
+                { value: 'row', label: 'Row' },
+                { value: 'column', label: 'Column' },
+                { value: 'row-reverse', label: 'Row Reverse' },
+                { value: 'column-reverse', label: 'Column Reverse' }
+              ], v => update('style', { ...(item.style || {}), display: v })));
               formContainer.appendChild(layoutRow);
 
               const grid = document.createElement('div');
@@ -437,7 +444,8 @@ export default class ColumnsBlock {
                 this.createRangeInput('Title Sz', s.titleFontSize, 'px', 10, 30, v => updateStyle('titleFontSize', v)),
                 this.createColorInput('Title', s.titleColor, v => updateStyle('titleColor', v)),
                 this.createRangeInput('Desc Sz', s.descFontSize, 'px', 10, 24, v => updateStyle('descFontSize', v)),
-                this.createColorInput('Desc', s.descColor, v => updateStyle('descColor', v))
+                this.createColorInput('Desc', s.descColor, v => updateStyle('descColor', v)),
+                this.createRangeInput('Img Size', s.imageSize, 'px', 20, 300, v => updateStyle('imageSize', v))
               );
               formContainer.appendChild(grid);
             }

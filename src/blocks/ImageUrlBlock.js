@@ -36,16 +36,79 @@ export default class ImageUrlBlock {
     const urlSection = document.createElement('div');
     urlSection.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 
+    // URL input row with upload button
+    const urlRow = document.createElement('div');
+    urlRow.style.cssText = 'display: flex; gap: 8px; align-items: flex-end;';
+
     const urlInput = this.createInput('Image URL', 'url', this.data.url, 'https://example.com/image.jpg', value => {
       this.data.url = value;
       this.updatePreview();
     });
+    urlInput.style.flex = '1';
+
+    // Upload Button
+    const uploadBtn = document.createElement('button');
+    uploadBtn.type = 'button';
+    uploadBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload';
+    uploadBtn.style.cssText = 'padding: 8px 12px; font-size: 12px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-bottom: 0;';
+    uploadBtn.onmouseenter = () => uploadBtn.style.background = '#4f46e5';
+    uploadBtn.onmouseleave = () => uploadBtn.style.background = '#6366f1';
+
+    // Hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/jpeg,image/png,image/gif,image/webp';
+    fileInput.style.display = 'none';
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      uploadBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Uploading...';
+      uploadBtn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Use full URL for email compatibility
+          const fullUrl = window.location.origin + result.url;
+          this.data.url = fullUrl;
+
+          // Update the URL input field
+          const urlInputEl = urlInput.querySelector('input');
+          if (urlInputEl) urlInputEl.value = fullUrl;
+
+          this.updatePreview();
+        } else {
+          alert('Upload failed: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Upload failed: ' + err.message);
+      } finally {
+        uploadBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload';
+        uploadBtn.disabled = false;
+        fileInput.value = '';
+      }
+    });
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    urlRow.append(urlInput, uploadBtn, fileInput);
 
     const altInput = this.createInput('Alt Text', 'text', this.data.alt, 'Image description', value => {
       this.data.alt = value;
     });
 
-    urlSection.append(urlInput, altInput);
+    urlSection.append(urlRow, altInput);
 
     // Style Settings Panel
     const stylePanel = document.createElement('div');

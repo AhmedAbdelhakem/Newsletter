@@ -13,6 +13,24 @@ function sanitize(input = '') {
         FORBID_ATTR: ['onmouseover', 'onclick']
     });
 }
+
+/**
+ * Convert SVG image URLs to PNG using weserv.nl proxy
+ * Gmail and most email clients don't support SVG images
+ */
+function convertSvgToPng(url) {
+    if (!url) return url;
+
+    // Check if URL ends with .svg (case insensitive)
+    if (url.toLowerCase().endsWith('.svg')) {
+        // Use weserv.nl proxy to convert SVG to PNG
+        // Remove protocol for weserv.nl format
+        const cleanUrl = url.replace(/^https?:\/\//, '');
+        return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=png`;
+    }
+
+    return url;
+}
 // ... (existing code matches)
 
 function applyTypographyStyle(base, block) {
@@ -269,7 +287,7 @@ function renderColumnItem(item) {
             const imgRadius = item.borderRadius || '4';
             const imgShadow = item.shadow === 'none' ? '' : `box-shadow:${item.shadow};`;
 
-            return `<div style="margin:0 0 12px 0;"><img src="${imgUrl}" alt="${imgAlt}" style="display:block;width:${imgWidth}%;max-width:100%;height:auto;border:0;border-radius:${imgRadius}px;${imgShadow}"></div>`;
+            return `<div style="margin:0 0 12px 0;"><img src="${convertSvgToPng(imgUrl)}" alt="${imgAlt}" style="display:block;width:${imgWidth}%;max-width:100%;height:auto;border:0;border-radius:${imgRadius}px;${imgShadow}"></div>`;
 
         case 'link':
             const linkText = sanitize(item.text || 'Link');
@@ -400,35 +418,65 @@ function renderLinkPreview(data, block) {
         titleFontSize: '16',
         descColor: '#6b7280',
         descFontSize: '14',
-        imageRadius: '6'
+        descFontSize: '14',
+        imageRadius: '6',
+        imageSize: '80',
+        imageFit: 'cover'
     };
 
-    const isColumn = s.display === 'column';
+    const isColumn = s.display === 'column' || s.display === 'column-reverse';
+    const isReverse = s.display === 'row-reverse' || s.display === 'column-reverse';
 
     // Container Table Styles
-    // For column layout, we might want fewer internal table complications, but standardizing as a table is good.
+    // We put padding on the items or use a wrapper table. 
+    // To ensure padding works reliably inside the border/background, we use a single cell table for container,
+    // and put the content inside with padding.
     const containerStyle = `border:${s.borderWidth}px solid ${s.borderColor};border-radius:${s.borderRadius}px;background-color:${s.backgroundColor};overflow:hidden;width:100%;`;
 
-    let contentHtml = '';
+    // Inner padding style
+    const paddingStyle = `padding:${s.padding}px;`;
 
-    if (isColumn) {
-        // Vertical Layout (Column)
-        // Row 1: Image (if exists)
-        if (imageUrl) {
-            contentHtml += `
+    let contentHtml = '';
+    const imgSize = s.imageSize || (isColumn ? '100%' : '80');
+    // Ensure imgSize has unit if needed, but here we assume number string means px or % logic handled below.
+    // Actually s.imageSize comes as string "80".
+
+    // Image Component
+    let imgComponent = '';
+    if (imageUrl) {
+        // Use user defined fit or default to 'contain'
+        const objFit = s.imageFit || 'cover';
+
+        if (isColumn) {
+            // Full width image
+            imgComponent = `
                 <tr>
-                    <td style="width:100%;padding:0;">
-                         <img src="${imageUrl}" alt="" style="display:block;width:100%;height:auto;border-top-left-radius:${s.borderRadius}px;border-top-right-radius:${s.borderRadius}px;border:0;">
+                    <td style="width:100%;padding:0 0 12px 0;">
+                         <img src="${convertSvgToPng(imageUrl)}" alt="" style="display:block;width:100%;height:auto;object-fit:${objFit};border-radius:${s.imageRadius}px;border:0;">
                     </td>
                 </tr>
             `;
-        }
+        } else {
+            // Row image
+            const sizeVal = imgSize; // e.g. "80"
+            imgComponent = `<td style="width:${sizeVal}px;padding:0 12px 0 0;"><img src="${convertSvgToPng(imageUrl)}" alt="" style="display:block;width:${sizeVal}px;height:${sizeVal}px;object-fit:${objFit};border-radius:${s.imageRadius}px;border:0;"></td>`;
 
-        // Row 2: Content
-        const contentPadding = imageUrl ? '12px' : `${s.padding}px`;
-        contentHtml += `
+            // If reverse, padding should be on left
+            if (isReverse) {
+                imgComponent = `<td style="width:${sizeVal}px;padding:0 0 0 12px;"><img src="${convertSvgToPng(imageUrl)}" alt="" style="display:block;width:${sizeVal}px;height:${sizeVal}px;object-fit:${objFit};border-radius:${s.imageRadius}px;border:0;"></td>`;
+            }
+        }
+    }
+
+    if (isColumn) {
+        // Vertical Layout (Column)
+        // Image Row and Content Row
+        // Image component handles its own TR.
+
+        // Content Row
+        const contentRow = `
             <tr>
-                <td style="${applyAlignmentStyle(`${TD_BASE} padding:${contentPadding};width:100%;`, block)}">
+                <td style="${applyAlignmentStyle(`${TD_BASE} width:100%;`, block)}">
                   <a href="${href}" style="text-decoration:none;display:block;">
                     <span style="display:block;margin:0 0 4px 0;font-family:Arial;font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
                     ${description ? `<span style="display:block;margin:0;font-family:Arial;font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
@@ -437,23 +485,36 @@ function renderLinkPreview(data, block) {
             </tr>
         `;
 
-    } else {
-        // Horizontal Layout (Row) - Original Style
-        const imgCell = imageUrl
-            ? `<td style="width:80px;padding:12px;"><img src="${imageUrl}" alt="" style="display:block;width:80px;height:80px;object-fit:cover;border-radius:${s.imageRadius}px;border:0;"></td>`
-            : '';
+        const innerTable = isReverse
+            ? contentRow + imgComponent
+            : imgComponent + contentRow;
 
-        const contentCell = `<td style="${applyAlignmentStyle(`${TD_BASE} padding:12px 12px 12px 0;vertical-align:middle;`, block)}">
+        contentHtml = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${innerTable}</table>`;
+
+    } else {
+        // Horizontal Layout (Row)
+        const contentCell = `<td style="${applyAlignmentStyle(`${TD_BASE} vertical-align:middle;`, block)}">
           <a href="${href}" style="text-decoration:none;display:block;">
             <span style="display:block;margin:0 0 4px 0;font-family:Arial;font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
             ${description ? `<span style="display:block;margin:0;font-family:Arial;font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
           </a>
         </td>`;
 
-        contentHtml = `<tr>${imgCell}${contentCell}</tr>`;
+        const innerRow = isReverse
+            ? contentCell + imgComponent
+            : imgComponent + contentCell;
+
+        contentHtml = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>${innerRow}</tr></table>`;
     }
 
-    return `<table role="presentation" width="100%" style="${containerStyle}"cellpadding="0" cellspacing="0">${contentHtml}</table>`;
+    // Wrap in container table with padding
+    return `<table role="presentation" width="100%" style="${containerStyle}" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="${paddingStyle}">
+                ${contentHtml}
+            </td>
+        </tr>
+    </table>`;
 }
 
 
@@ -491,7 +552,7 @@ const blockRenderers = {
         const shadow = data.shadow || 'none';
         const alignment = data.alignment || 'center';
         const alt = sanitize(data.alt || '');
-        return wrapRow(`<table role="presentation" width="100%"><tr><td align="${alignment}" style="${TD_BASE} padding:16px 24px;"><img src="${data.url}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};"></td></tr></table>`);
+        return wrapRow(`<table role="presentation" width="100%"><tr><td align="${alignment}" style="${TD_BASE} padding:16px 24px;"><img src="${convertSvgToPng(data.url)}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};"></td></tr></table>`);
     },
     video: block => {
         const data = block.data;
@@ -565,7 +626,7 @@ const blockRenderers = {
     spacer: block => wrapRow(`<table role="presentation" width="100%"><tr><td style="${TD_BASE} padding:0;"><div style="height:${block.data.height}px;"></div></td></tr></table>`),
     row: block => wrapRow(renderColumns(block.data || {})),
     columns: block => wrapRow(renderColumns(block.data || {})),
-    linkTool: block => wrapRow(renderLinkPreview(block.data || {}, block)),
+    linkTool: block => wrapRow(`<table role="presentation" width="100%"><tr><td style="${TD_BASE} padding:16px 24px;">${renderLinkPreview(block.data || {}, block)}</td></tr></table>`),
 };
 
 

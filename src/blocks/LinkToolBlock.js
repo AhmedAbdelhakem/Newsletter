@@ -21,7 +21,8 @@ export default class LinkToolBlock {
                 titleFontSize: '16',
                 descColor: '#6b7280',
                 descFontSize: '14',
-                imageRadius: '6'
+                imageRadius: '6',
+                imageSize: '80'
             }
         };
         this.api = api;
@@ -203,10 +204,10 @@ export default class LinkToolBlock {
             layoutSelect.style.padding = '6px';
             layoutSelect.style.border = '1px solid #e5e7eb';
             layoutSelect.style.borderRadius = '4px';
-            ['row', 'column'].forEach(opt => {
+            ['row', 'column', 'row-reverse', 'column-reverse'].forEach(opt => {
                 const option = document.createElement('option');
                 option.value = opt;
-                option.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+                option.textContent = opt.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 option.selected = this.data.style.display === opt;
                 layoutSelect.appendChild(option);
             });
@@ -251,7 +252,8 @@ export default class LinkToolBlock {
                 createStyleInput('Title Size (px)', 'titleFontSize', 'number'),
                 createStyleInput('Title Color', 'titleColor', 'color'),
                 createStyleInput('Desc Size (px)', 'descFontSize', 'number'),
-                createStyleInput('Desc Color', 'descColor', 'color')
+                createStyleInput('Desc Color', 'descColor', 'color'),
+                createStyleInput('Image Size (px)', 'imageSize', 'number')
             );
             this.wrapper.append(grid);
         }
@@ -287,7 +289,7 @@ export default class LinkToolBlock {
         this.wrapper.style.position = 'relative';
 
         const s = data.style;
-        const isColumn = s.display === 'column';
+        const isColumn = s.display === 'column' || s.display === 'column-reverse';
 
         const preview = document.createElement('div');
         preview.style.border = `${s.borderWidth}px solid ${s.borderColor}`;
@@ -296,7 +298,7 @@ export default class LinkToolBlock {
         preview.style.padding = `${s.padding}px`;
         preview.style.overflow = 'hidden';
         preview.style.display = 'flex';
-        preview.style.flexDirection = isColumn ? 'column' : 'row';
+        preview.style.flexDirection = s.display;
         preview.style.marginTop = '10px';
         preview.style.alignItems = isColumn ? 'flex-start' : 'center'; // Align items vertically
 
@@ -307,13 +309,15 @@ export default class LinkToolBlock {
         // Image
         let imageContainer = '';
         if (data.meta.image && data.meta.image.url) {
+            const imgSize = s.imageSize ? `${s.imageSize}px` : (isColumn ? '100%' : '80px');
+
             const imgStyle = isColumn
                 ? `width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: ${s.imageRadius}px; display: block;`
                 : `width: 100%; height: 100%; object-fit: cover;`;
 
             const wrapperStyle = isColumn
                 ? `width: 100%; margin-bottom: 12px;`
-                : `width: 80px; height: 80px; flex-shrink: 0; background: #f4f5f7; margin: 12px; border-radius: ${s.imageRadius}px; overflow: hidden;`;
+                : `width: ${imgSize}; height: ${imgSize}; flex-shrink: 0; background: #f4f5f7; margin: 12px; border-radius: ${s.imageRadius}px; overflow: hidden;`;
 
             imageContainer = `
             <div style="${wrapperStyle}">

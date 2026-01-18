@@ -24,6 +24,7 @@
     "editorjs-text-color-plugin": "^2.0.4",
     "express": "^5.2.1",
     "lucide-react": "^0.562.0",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

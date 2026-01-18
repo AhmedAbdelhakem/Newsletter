@@ -295,23 +295,23 @@ function Editor({ onChange }) {
         }
         
         .ce-popover-item--confirmation {
-            background-color: #fee2e2 !important;
-            color: #ef4444 !important;
+            background-color: #df1515 !important;
+            color: #fff !important;
         }
         
         .ce-popover-item--confirmation:hover {
-            background-color: #fca5a5 !important;
-            color: #b91c1c !important;
+            background-color: #dc2626 !important;
+            color: #fff !important;
         }
 
         /* Ensure text is visible in hover state for delete confirmation */
         .ce-popover__item--confirm {
-             background-color: #fee2e2 !important;
-             color: #ef4444 !important;
+             background-color: #df1515 !important;
+             color: #fff !important;
         }
         .ce-popover__item--confirm:hover {
-             background-color: #fef2f2 !important;
-             color: #dc2626 !important;
+             background-color: #dc2626 !important;
+             color: #fff !important;
         }
         /* Default hover for other items */
         .ce-popover__item:hover:not(.ce-popover__item--confirm) {

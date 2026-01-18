@@ -4,6 +4,30 @@ A powerful, drag-and-drop newsletter builder built with **React** and **Editor.j
 
 ![Newsletter Builder Preview]
 
+## 💡 What Problem It Solves
+
+Building professional, beautiful newsletters shouldn't require coding skills or expensive subscriptions. **Newsletter Builder** bridges the gap between simple text editors and complex enterprise solutions by providing:
+
+*   **Visual Design Freedom**: Create layouts that look exactly how you envision them—no HTML knowledge required.
+*   **Instant Compatibility**: Outputs HTML that works across Gmail, Outlook, Apple Mail, and more.
+*   **Zero Lock-in**: Export your HTML and use it anywhere. No proprietary formats, no vendor dependency.
+*   **Rapid Iteration**: See changes instantly with live preview. No save-refresh cycles.
+
+## ⚠️ Why Email Is Hard
+
+Unlike web pages, **email HTML is stuck in the early 2000s**. Here's what makes it challenging:
+
+| Challenge | Why It's Hard |
+|-----------|---------------|
+| **No CSS Flexbox/Grid** | Email clients don't support modern CSS layouts. Everything must use `<table>` elements. |
+| **Inline Styles Only** | Many clients strip `<style>` tags. Every element needs `style="..."` attributes. |
+| **Client Fragmentation** | Gmail, Outlook, Apple Mail, and Yahoo all render HTML differently. |
+| **Dark Mode Chaos** | Each client implements dark mode differently—some invert colors, others don't. |
+| **Image Blocking** | Many clients block images by default, breaking purely visual designs. |
+| **No JavaScript** | Interactive elements don't work. Emails must be static. |
+
+**Newsletter Builder** handles all of this complexity behind the scenes, converting your visual designs into battle-tested, table-based HTML that renders consistently everywhere.
+
 ## 🚀 Key Features
 
 *   **Drag & Drop Interface**: Intuitive block-based editor powered by [Editor.js](https://editorjs.io/).
