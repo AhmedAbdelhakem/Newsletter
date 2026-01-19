@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Monitor, Smartphone } from 'lucide-react';
 
-function Preview({ html, hasBlocks = false }) {
+function Preview({ html, hasBlocks = false, isResizing = false }) {
   const iframeRef = useRef(null);
   const [viewMode, setViewMode] = useState('desktop'); // 'desktop' or 'mobile'
 
@@ -17,24 +17,24 @@ function Preview({ html, hasBlocks = false }) {
   const viewportWidth = viewMode === 'desktop' ? '600px' : '375px';
 
   return (
-    <div className="preview-wrapper">
-      <div className="preview-header">
-        <div className="preview-title">Preview</div>
-        <div className="preview-controls">
-          <div className="view-label">
+    <div className="flex flex-col h-full bg-slate-50 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-gray-200">
+        <div className="text-sm font-semibold text-gray-800">Preview</div>
+        <div className="flex items-center gap-4">
+          <div className="text-[13px] text-gray-500 flex items-center gap-2">
             {viewMode === 'desktop' ? 'Desktop' : 'Mobile'} View
-            <span className="viewport-size">{viewportWidth}</span>
+            <span className="text-xs text-gray-400">{viewportWidth}</span>
           </div>
-          <div className="device-toggle">
+          <div className="flex items-center bg-gray-100 rounded-md p-0.5">
             <button
-              className={`toggle-btn ${viewMode === 'desktop' ? 'active' : ''}`}
+              className={`flex items-center justify-center w-8 h-7 bg-transparent border-none rounded text-gray-400 cursor-pointer transition-all hover:text-gray-600 ${viewMode === 'desktop' ? 'bg-white text-blue-500 shadow-sm' : ''}`}
               onClick={() => setViewMode('desktop')}
               title="Desktop view"
             >
               <Monitor size={16} />
             </button>
             <button
-              className={`toggle-btn ${viewMode === 'mobile' ? 'active' : ''}`}
+              className={`flex items-center justify-center w-8 h-7 bg-transparent border-none rounded text-gray-400 cursor-pointer transition-all hover:text-gray-600 ${viewMode === 'mobile' ? 'bg-white text-blue-500 shadow-sm' : ''}`}
               onClick={() => setViewMode('mobile')}
               title="Mobile view"
             >
@@ -44,136 +44,23 @@ function Preview({ html, hasBlocks = false }) {
         </div>
       </div>
 
-      <div className="preview-body">
+      <div className="flex-1 bg-gray-200 flex justify-center items-start overflow-hidden pt-5">
         {!hasBlocks ? (
-          <div className="empty-state">
-            <span className="empty-text">No blocks yet</span>
+          <div className="flex items-center justify-center h-full w-full">
+            <span className="text-sm text-gray-400">No blocks yet</span>
           </div>
         ) : (
-          <div className="iframe-container" style={{ maxWidth: viewportWidth }}>
+          <div className={`w-full h-[calc(100%-40px)] bg-white shadow-md overflow-hidden transition-all duration-300 rounded-lg ${isResizing ? 'pointer-events-none' : ''}`} style={{ maxWidth: viewportWidth }}>
             <iframe
               ref={iframeRef}
               title="Email Preview"
-              className="preview-frame"
+              className="w-full h-full border-0 bg-white"
             />
           </div>
         )}
       </div>
-
-      <style>{`
-        .preview-wrapper {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          background: #f8fafc;
-          border-radius: 12px;
-          overflow: hidden;
-        }
-        
-        .preview-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 20px;
-          background: #ffffff;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .preview-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1f2937;
-        }
-        
-        .preview-controls {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        
-        .view-label {
-          font-size: 13px;
-          color: #6b7280;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        
-        .viewport-size {
-          font-size: 12px;
-          color: #9ca3af;
-        }
-        
-        .device-toggle {
-          display: flex;
-          align-items: center;
-          background: #f3f4f6;
-          border-radius: 6px;
-          padding: 2px;
-        }
-        
-        .toggle-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 28px;
-          background: transparent;
-          border: none;
-          border-radius: 4px;
-          color: #9ca3af;
-          cursor: pointer;
-          transition: all 0.15s ease;
-        }
-        
-        .toggle-btn:hover {
-          color: #6b7280;
-        }
-        
-        .toggle-btn.active {
-          background: #ffffff;
-          color: #3b82f6;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        
-        .preview-body {
-          flex: 1;
-          padding: 20px;
-          display: flex;
-          justify-content: center;
-          overflow-y: auto;
-        }
-        
-        .empty-state {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          min-height: 200px;
-        }
-        
-        .empty-text {
-          font-size: 14px;
-          color: #9ca3af;
-        }
-        
-        .iframe-container {
-          width: 100%;
-          background: #ffffff;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          overflow: hidden;
-          transition: max-width 0.2s ease;
-        }
-        
-        .preview-frame {
-          width: 100%;
-          min-height: 500px;
-          border: none;
-          display: block;
-        }
-      `}</style>
     </div>
+
   );
 }
 

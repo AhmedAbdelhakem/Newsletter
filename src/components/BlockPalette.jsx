@@ -30,13 +30,13 @@ function BlockPalette() {
   );
 
   return (
-    <div className="block-palette">
+    <div className="flex flex-col gap-3">
       {/* Filter Input */}
-      <div className="filter-wrapper">
-        <Search size={16} className="filter-icon" />
+      <div className="relative flex items-center">
+        <Search size={16} className="absolute left-3 text-gray-400 pointer-events-none" />
         <input
           type="text"
-          className="filter-input"
+          className="w-full py-2.5 pl-9 pr-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400"
           placeholder="Filter"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -44,7 +44,7 @@ function BlockPalette() {
       </div>
 
       {/* Block List */}
-      <div className="block-list">
+      <div className="flex flex-col gap-1">
         {filteredBlocks.map((block) => {
           const isTextIcon = typeof block.icon === 'string';
           const IconComponent = isTextIcon ? null : block.icon;
@@ -52,127 +52,26 @@ function BlockPalette() {
           return (
             <div
               key={block.id}
-              className="palette-item"
+              className="flex items-center gap-3 px-3 py-2.5 bg-white border border-transparent rounded-lg cursor-grab select-none transition-all hover:bg-slate-50 hover:border-gray-200 active:cursor-grabbing"
               draggable
               onDragStart={(e) => handleDragStart(e, block.id)}
             >
-              <div className="palette-icon">
+              <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-md text-indigo-500 shrink-0">
                 {isTextIcon ? (
-                  <span className="text-icon">{block.icon}</span>
+                  <span className="text-base font-semibold text-indigo-500">{block.icon}</span>
                 ) : (
                   <IconComponent size={18} strokeWidth={1.5} />
                 )}
               </div>
-              <span className="palette-name">{block.name}</span>
+              <span className="text-sm font-medium text-gray-700">{block.name}</span>
             </div>
           );
         })}
       </div>
 
       {filteredBlocks.length === 0 && (
-        <div className="no-results">No blocks found</div>
+        <div className="text-center py-5 text-gray-400 text-[13px]">No blocks found</div>
       )}
-
-      <style>{`
-        .block-palette {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        
-        .filter-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-        
-        .filter-icon {
-          position: absolute;
-          left: 12px;
-          color: #9ca3af;
-          pointer-events: none;
-        }
-        
-        .filter-input {
-          width: 100%;
-          padding: 10px 12px 10px 38px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 14px;
-          color: #374151;
-          background: #ffffff;
-          transition: all 0.15s ease;
-        }
-        
-        .filter-input:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .filter-input::placeholder {
-          color: #9ca3af;
-        }
-        
-        .block-list {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        
-        .palette-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 12px;
-          background: #ffffff;
-          border: 1px solid transparent;
-          border-radius: 8px;
-          cursor: grab;
-          transition: all 0.15s ease;
-          user-select: none;
-        }
-        
-        .palette-item:hover {
-          background: #f8fafc;
-          border-color: #e5e7eb;
-        }
-        
-        .palette-item:active {
-          cursor: grabbing;
-        }
-        
-        .palette-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          background: #f3f4f6;
-          border-radius: 6px;
-          color: #6366f1;
-          flex-shrink: 0;
-        }
-        
-        .palette-icon .text-icon {
-          font-size: 16px;
-          font-weight: 600;
-          color: #6366f1;
-        }
-        
-        .palette-name {
-          font-size: 14px;
-          font-weight: 500;
-          color: #374151;
-        }
-        
-        .no-results {
-          text-align: center;
-          padding: 20px;
-          color: #9ca3af;
-          font-size: 13px;
-        }
-      `}</style>
     </div>
   );
 }

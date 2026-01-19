@@ -24,6 +24,7 @@ function App() {
   });
   const [status, setStatus] = useState('');
   const [showSendModal, setShowSendModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Resizable preview panel state
   const [previewWidth, setPreviewWidth] = useState(320);
@@ -123,52 +124,82 @@ function App() {
     setTimeout(() => setStatus(''), 3000);
   }, [editorData, pageSettings]);
 
+  const handleCopy = useCallback(() => {
+    const html = renderEmailHTML(editorData, pageSettings);
+    navigator.clipboard.writeText(html).then(() => {
+      setStatus('Copied!');
+      setTimeout(() => setStatus(''), 3000);
+    });
+  }, [editorData, pageSettings]);
+
   const previewHtml = renderEmailHTML(editorData, pageSettings);
   const hasBlocks = editorData.blocks && editorData.blocks.length > 0;
 
+  const editorRef = useRef(null);
+
+  const handleUndo = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.undo();
+    }
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.redo();
+    }
+  }, []);
+
   return (
-    <div className="app-wrapper">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header
         onSave={handleSave}
         onPreview={handlePreview}
         onSendTest={() => setShowSendModal(true)}
         onExport={handleExport}
+        onCopy={handleCopy}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onSettings={() => setShowSettingsModal(true)}
       />
 
-      <main className="app-main" style={{ gridTemplateColumns: `220px 1fr ${previewWidth}px` }}>
+      <main
+        className="flex-1 grid gap-0 p-0 relative max-[1200px]:grid-cols-1! max-[1200px]:p-4 max-[1200px]:gap-4"
+        style={{ gridTemplateColumns: `220px 1fr ${previewWidth}px` }}
+      >
         {/* Left Sidebar: Content Blocks */}
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <h2 className="sidebar-title">Content Blocks</h2>
-            <p className="sidebar-subtitle">Drag blocks to the canvas</p>
+        <aside className="flex flex-col bg-white border-r border-gray-200 py-5 px-4 max-[1200px]:-order-1 max-[1200px]:border-r-0 max-[1200px]:border-b">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-gray-800 mb-1">Content Blocks</h2>
+            <p className="text-xs text-gray-400">Drag blocks to the canvas</p>
           </div>
-          <div className="sidebar-content">
+          <div className="flex-1 overflow-y-auto">
             <BlockPalette />
           </div>
-          <div className="sidebar-footer">
-            <p className="tip-text">Tip: Click any block in the canvas to edit it directly</p>
+          <div className="pt-4 border-t border-gray-200 mt-4">
+            <p className="text-[11px] text-gray-400 leading-snug">Tip: Click any block in the canvas to edit it directly</p>
           </div>
         </aside>
 
         {/* Center: Editor Canvas */}
-        <section className="canvas-section">
-          <div className="canvas-wrapper">
-            <Editor onChange={handleEditorChange} />
+        <section className="flex flex-col p-6 bg-slate-50">
+          <div className="flex-1 bg-white border-2 border-dashed border-blue-500 rounded-xl min-h-[600px] flex flex-col">
+            <Editor ref={editorRef} onChange={handleEditorChange} />
           </div>
         </section>
 
         {/* Resize Handle */}
         <div
-          className={`resize-handle ${isResizing ? 'active' : ''}`}
+          className={`absolute top-0 bottom-0 w-3 cursor-col-resize flex items-center justify-center z-50 transition-colors duration-150 hover:bg-blue-500/10 group max-[1200px]:hidden ${isResizing ? 'bg-blue-500/10' : ''}`}
+          style={{ right: previewWidth - 6 }}
           onMouseDown={handleMouseDown}
           ref={resizeRef}
         >
-          <div className="resize-line" />
+          <div className={`w-1 h-10 bg-gray-300 rounded-sm transition-all duration-150 group-hover:bg-blue-500 group-hover:h-[60px] ${isResizing ? 'bg-blue-500 h-[60px]' : ''}`} />
         </div>
 
         {/* Right: Preview Panel */}
-        <aside className="preview-section">
-          <Preview html={previewHtml} hasBlocks={hasBlocks} />
+        <aside className="bg-slate-50 border-l border-gray-200 max-[1200px]:border-l-0 max-[1200px]:border-t">
+          <Preview html={previewHtml} hasBlocks={hasBlocks} isResizing={isResizing} />
         </aside>
       </main>
 
@@ -179,146 +210,36 @@ function App() {
         />
       )}
 
-      <style>{`
-        .app-wrapper {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          background: #f8fafc;
-        }
-        
-        .app-main {
-          flex: 1;
-          display: grid;
-          gap: 0;
-          padding: 0;
-          position: relative;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-          display: flex;
-          flex-direction: column;
-          background: #ffffff;
-          border-right: 1px solid #e5e7eb;
-          padding: 20px 16px;
-        }
-        
-        .sidebar-header {
-          margin-bottom: 16px;
-        }
-        
-        .sidebar-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 4px;
-        }
-        
-        .sidebar-subtitle {
-          font-size: 12px;
-          color: #9ca3af;
-        }
-        
-        .sidebar-content {
-          flex: 1;
-          overflow-y: auto;
-        }
-        
-        .sidebar-footer {
-          padding-top: 16px;
-          border-top: 1px solid #e5e7eb;
-          margin-top: 16px;
-        }
-        
-        .tip-text {
-          font-size: 11px;
-          color: #9ca3af;
-          line-height: 1.4;
-        }
-        
-        /* Canvas Section */
-        .canvas-section {
-          display: flex;
-          flex-direction: column;
-          padding: 24px;
-          background: #f8fafc;
-        }
-        
-        .canvas-wrapper {
-          flex: 1;
-          background: #ffffff;
-          border: 2px dashed #3b82f6;
-          border-radius: 12px;
-          min-height: 600px;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        /* Resize Handle */
-        .resize-handle {
-          position: absolute;
-          right: ${previewWidth}px;
-          top: 0;
-          bottom: 0;
-          width: 12px;
-          cursor: col-resize;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 10;
-          transition: background 0.15s ease;
-        }
-        
-        .resize-handle:hover,
-        .resize-handle.active {
-          background: rgba(59, 130, 246, 0.1);
-        }
-        
-        .resize-line {
-          width: 4px;
-          height: 40px;
-          background: #d1d5db;
-          border-radius: 2px;
-          transition: all 0.15s ease;
-        }
-        
-        .resize-handle:hover .resize-line,
-        .resize-handle.active .resize-line {
-          background: #3b82f6;
-          height: 60px;
-        }
-        
-        /* Preview Section */
-        .preview-section {
-          background: #f8fafc;
-          border-left: 1px solid #e5e7eb;
-        }
-        
-        @media (max-width: 1200px) {
-          .app-main {
-            grid-template-columns: 1fr !important;
-            padding: 16px;
-            gap: 16px;
-          }
-          
-          .sidebar {
-            order: -1;
-            border-right: none;
-            border-bottom: 1px solid #e5e7eb;
-          }
-          
-          .resize-handle {
-            display: none;
-          }
-          
-          .preview-section {
-            border-left: none;
-            border-top: 1px solid #e5e7eb;
-          }
-        }
-      `}</style>
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-1000 animate-in fade-in duration-200" onClick={() => setShowSettingsModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-4 duration-300" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
+              <h3 className="text-base font-semibold text-gray-800">Global Style</h3>
+              <button
+                className="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
+                onClick={() => setShowSettingsModal(false)}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-2 overflow-y-auto">
+              <PageSettings settings={pageSettings} onChange={handleSettingsChange} />
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl shrink-0 flex justify-end">
+              <button
+                className="px-5 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors cursor-pointer"
+                onClick={() => setShowSettingsModal(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+
   );
 }
 

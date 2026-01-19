@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import Paragraph from '@editorjs/paragraph';
 import Checklist from '@editorjs/checklist';
 import ColorPlugin from 'editorjs-text-color-plugin';
+import Undo from 'editorjs-undo';
 
 // ...
 
@@ -19,12 +20,26 @@ import LinkToolBlock from '../blocks/LinkToolBlock';
 import AlignmentTune from '../tunes/AlignmentTune';
 import TypographyTune from '../tunes/TypographyTune';
 
-function Editor({ onChange }) {
+const Editor = forwardRef(({ onChange }, ref) => {
     const editorRef = useRef(null);
     const holderRef = useRef(null);
+    const undoRef = useRef(null); // Ref for undo instance
     const [isDragOver, setIsDragOver] = useState(false);
     const manualSaveRef = useRef(() => { }); // Ref to hold the save function
     const debounceTimerRef = useRef(null); // Debounce timer for smoother updates
+
+    useImperativeHandle(ref, () => ({
+        undo: () => {
+            if (undoRef.current) {
+                undoRef.current.undo();
+            }
+        },
+        redo: () => {
+            if (undoRef.current) {
+                undoRef.current.redo();
+            }
+        }
+    }));
 
     useEffect(() => {
         if (editorRef.current) return;
@@ -128,6 +143,11 @@ function Editor({ onChange }) {
                     }
                 }, 150); // 150ms debounce for smooth updates
             },
+            onReady: () => {
+                // Initialize Undo plugin
+                undoRef.current = new Undo({ editor });
+                undoRef.current.initialize(savedData);
+            }
         });
 
         // Set the manual save function with debounce
@@ -228,110 +248,21 @@ function Editor({ onChange }) {
 
     return (
         <div
-            className={`editor-wrapper ${isDragOver ? 'drag-over' : ''}`}
+            className={`relative min-h-[500px] h-full transition-all duration-200 ease-out [&_.ce-block__content]:max-w-full [&_.codex-editor__redactor]:pb-[120px]! [&_.ce-popover-item__icon]:text-inherit! [&_.ce-popover-item--confirmation]:bg-red-600! [&_.ce-popover-item--confirmation]:text-white! [&_.ce-popover__item--confirm]:bg-red-600! [&_.ce-popover__item--confirm]:text-white! [&_.ce-popover-item--confirmation:hover]:bg-red-700! [&_.ce-popover__item--confirm:hover]:bg-red-700! [&_.ce-popover__item:not(.ce-popover__item--confirm):hover]:bg-slate-100! ${isDragOver ? 'bg-blue-50/50' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            <div ref={holderRef} className="editor-holder" />
+            <div ref={holderRef} className="min-h-[500px] p-5" />
 
             {isDragOver && (
-                <div className="drop-indicator">
-                    <div className="drop-icon">+</div>
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-3 bg-blue-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-blue-500/30 animate-pulse">
+                    <div className="w-5 h-5 flex items-center justify-center bg-white/20 rounded-full font-bold">+</div>
                     <span>Drop to add block</span>
                 </div>
             )}
-
-            <style>{`
-        .editor-wrapper {
-          position: relative;
-          min-height: 500px;
-          transition: all 0.2s ease;
-          height: 100%;
-        }
-        
-        .editor-wrapper.drag-over {
-          background: rgba(59, 130, 246, 0.05);
-        }
-        
-        .editor-holder {
-          min-height: 500px;
-          padding: 20px;
-        }
-        
-        .editor-holder .ce-block__content {
-          max-width: 100%;
-        }
-        
-        .editor-holder .codex-editor__redactor {
-          padding-bottom: 120px !important;
-        }
-        
-        .drop-indicator {
-          position: absolute;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 20px;
-          background: #3b82f6;
-          color: white;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 500;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-          animation: pulse 1s ease-in-out infinite;
-        }
-        
-        .drop-icon {
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(255,255,255,0.2);
-          border-radius: 50%;
-          font-weight: bold;
-        }
-        
-        @keyframes pulse {
-          0%, 100% { transform: translateX(-50%) scale(1); }
-          50% { transform: translateX(-50%) scale(1.02); }
-        }
-
-        /* Fix EditorJS Popover Item Hover Colors */
-        .ce-popover-item__icon {
-            color: inherit !important;
-        }
-        
-        .ce-popover-item--confirmation {
-            background-color: #df1515 !important;
-            color: #fff !important;
-        }
-        
-        .ce-popover-item--confirmation:hover {
-            background-color: #dc2626 !important;
-            color: #fff !important;
-        }
-
-        /* Ensure text is visible in hover state for delete confirmation */
-        .ce-popover__item--confirm {
-             background-color: #df1515 !important;
-             color: #fff !important;
-        }
-        .ce-popover__item--confirm:hover {
-             background-color: #dc2626 !important;
-             color: #fff !important;
-        }
-        /* Default hover for other items */
-        .ce-popover__item:hover:not(.ce-popover__item--confirm) {
-            background-color: #f1f5f9 !important;
-        }
-      `}</style>
         </div>
     );
-}
+});
 
 export default Editor;

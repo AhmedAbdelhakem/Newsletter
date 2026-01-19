@@ -17,55 +17,18 @@ class ErrorBoundary extends React.Component {
     render() {
         if (this.state.hasError) {
             return (
-                <div style={{
-                    minHeight: '100vh',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: '#fef2f2',
-                    padding: '20px'
-                }}>
-                    <div style={{
-                        background: 'white',
-                        padding: '30px',
-                        borderRadius: '12px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                        maxWidth: '600px',
-                        width: '100%',
-                        border: '1px solid #fecaca'
-                    }}>
-                        <h2 style={{ color: '#991b1b', marginTop: 0, marginBottom: '10px' }}>Something went wrong</h2>
-                        <p style={{ color: '#7f1d1d', marginBottom: '20px' }}>The application encountered an unexpected error.</p>
+                <div className="min-h-screen flex items-center justify-center bg-red-50 p-5">
+                    <div className="bg-white p-8 rounded-xl shadow-xl max-w-xl w-full border border-red-200">
+                        <h2 className="text-red-800 text-2xl font-bold mt-0 mb-3">Something went wrong</h2>
+                        <p className="text-red-900 mb-5">The application encountered an unexpected error.</p>
 
-                        <div style={{
-                            background: '#f8fafc',
-                            padding: '15px',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            marginBottom: '20px',
-                            color: '#334155',
-                            fontSize: '13px',
-                            fontFamily: 'monospace',
-                            overflowX: 'auto'
-                        }}>
+                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-5 text-slate-700 text-[13px] font-mono overflow-x-auto">
                             {this.state.error && this.state.error.toString()}
                         </div>
 
                         <button
                             onClick={() => window.location.reload()}
-                            style={{
-                                background: '#ef4444',
-                                color: 'white',
-                                border: 'none',
-                                padding: '10px 20px',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s'
-                            }}
-                            onMouseOver={e => e.target.style.background = '#dc2626'}
-                            onMouseOut={e => e.target.style.background = '#ef4444'}
+                            className="bg-red-500 text-white border-0 px-5 py-2.5 rounded-md text-sm font-semibold cursor-pointer transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                         >
                             Reload Page
                         </button>

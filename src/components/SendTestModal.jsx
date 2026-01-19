@@ -52,33 +52,33 @@ function SendTestModal({ html, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="modal-title">
-            <Mail size={20} />
-            <h3>Send Test Email</h3>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-1000 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] animate-in slide-in-from-bottom-4 duration-300" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-2.5">
+            <Mail size={20} className="text-blue-500" />
+            <h3 className="text-base font-semibold text-gray-800">Send Test Email</h3>
           </div>
-          <button className="modal-close" onClick={onClose}>
+          <button className="p-1.5 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="p-6">
           {status === 'success' ? (
-            <div className="success-message">
-              <CheckCircle size={48} />
-              <h4>Email Sent!</h4>
-              <p>Your test newsletter has been sent to <strong>{email}</strong></p>
+            <div className="text-center py-5">
+              <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">Email Sent!</h4>
+              <p className="text-sm text-gray-500 mb-4">Your test newsletter has been sent to <strong>{email}</strong></p>
 
               {previewUrl && (
-                <div className="preview-box">
-                  <p className="preview-hint">Since no real SMTP is configured, view it here:</p>
+                <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 mt-4">
+                  <p className="text-xs text-sky-700 mb-3">Since no real SMTP is configured, view it here:</p>
                   <a
                     href={previewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="preview-link"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-sky-600 text-white no-underline rounded-md text-sm font-medium transition-transform hover:bg-sky-700 hover:-translate-y-px"
                   >
                     <ExternalLink size={14} />
                     View Email in Browser
@@ -87,56 +87,60 @@ function SendTestModal({ html, onClose }) {
               )}
 
               {!previewUrl && (
-                <p className="success-hint">Check your real inbox!</p>
+                <p className="text-emerald-700 font-medium text-sm">Check your real inbox!</p>
               )}
             </div>
           ) : (
             <>
-              <p className="modal-description">
-                Send a test version of your newsletter.
-              </p>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+                  Send a test version of your newsletter.
+                </p>
 
-              <div className="form-group">
-                <label>Recipient Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="test@example.com"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Subject Line</label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={e => setSubject(e.target.value)}
-                  placeholder="Newsletter Test"
-                />
-              </div>
-
-              {error && (
-                <div className="error-message">
-                  <AlertCircle size={14} />
-                  {error}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-gray-500">Recipient Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="test@example.com"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                  />
                 </div>
-              )}
 
-              <div className="modal-note">
-                <strong>Note:</strong> Make sure <code>node email-server.mjs</code> is running. To enable real delivery, configure Gmail credentials in that file.
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-gray-500">Subject Line</label>
+                  <input
+                    type="text"
+                    value={subject}
+                    onChange={e => setSubject(e.target.value)}
+                    placeholder="Newsletter Test"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-[13px]">
+                    <AlertCircle size={14} className="shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <div className="p-3 bg-gray-50 rounded-lg text-[11px] text-gray-600 border-l-[3px] border-gray-300">
+                  <strong>Note:</strong> Make sure <code>node email-server.mjs</code> is running. To enable real delivery, configure Gmail credentials in that file.
+                </div>
               </div>
             </>
           )}
         </div>
 
         {status !== 'success' && (
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={onClose}>
+          <div className="flex justify-end gap-2.5 px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+            <button className="px-4 py-2 bg-white border border-gray-200 rounded-md text-gray-700 text-[13px] font-medium cursor-pointer transition-colors hover:bg-gray-50 hover:border-gray-300" onClick={onClose}>
               Cancel
             </button>
             <button
-              className="btn btn-primary"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 border border-blue-500 rounded-md text-white text-[13px] font-medium cursor-pointer transition-colors hover:bg-blue-600 hover:border-blue-600 shadow-sm shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
               onClick={handleSend}
               disabled={status === 'sending'}
             >
@@ -147,209 +151,12 @@ function SendTestModal({ html, onClose }) {
         )}
 
         {status === 'success' && (
-          <div className="modal-footer">
-            <button className="btn btn-primary" onClick={onClose}>
+          <div className="flex justify-end px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+            <button className="px-5 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors" onClick={onClose}>
               Done
             </button>
           </div>
         )}
-
-        <style>{`
-          .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.2s ease;
-          }
-          
-          .modal-content {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 420px;
-            animation: slideUp 0.25s ease;
-          }
-          
-          .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-light);
-          }
-          
-          .modal-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          
-          .modal-title svg {
-            color: var(--accent-primary);
-          }
-          
-          .modal-title h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-          }
-          
-          .modal-close {
-            padding: 6px;
-            background: none;
-            border: none;
-            color: var(--text-tertiary);
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.15s;
-          }
-          
-          .modal-close:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-          }
-          
-          .modal-body {
-            padding: 24px;
-          }
-          
-          .modal-description {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-            line-height: 1.5;
-          }
-          
-          .form-group {
-            margin-bottom: 16px;
-          }
-          
-          .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-          }
-          
-          .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            font-size: 14px;
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-          }
-          
-          .error-message {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 12px;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            border-radius: 8px;
-            font-size: 13px;
-          }
-          
-          .modal-note {
-             padding: 10px;
-             background: #f3f4f6;
-             border-radius: 8px;
-             font-size: 11px;
-             color: #4b5563;
-             margin-top: 16px;
-             border-left: 3px solid #cbd5e1;
-          }
-          
-          .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            padding: 16px 24px;
-            border-top: 1px solid var(--border-light);
-            background: var(--bg-tertiary);
-            border-radius: 0 0 16px 16px;
-          }
-          
-          .success-message {
-            text-align: center;
-            padding: 20px;
-          }
-          
-          .success-message svg {
-            color: #10b981;
-            margin-bottom: 16px;
-          }
-          
-          .success-message h4 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-          }
-          
-          .success-message p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-          }
-          
-          .preview-box {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-          }
-          
-          .preview-hint {
-            font-size: 12px;
-            color: #0369a1;
-            margin-bottom: 12px;
-          }
-          
-          .preview-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 16px;
-            background: #0284c7;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.15s;
-          }
-          
-          .preview-link:hover {
-            background: #0369a1;
-            transform: translateY(-1px);
-          }
-          
-          .success-hint {
-            color: #166534;
-            font-weight: 500;
-            font-size: 14px;
-          }
-          
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
       </div>
     </div>
   );
