@@ -52,6 +52,13 @@ function Editor({ onChange }) {
                 list: {
                     class: List,
                     inlineToolbar: ['bold', 'italic', 'link', 'textColor'],
+                    config: { defaultStyle: 'unordered' },
+                    tunes: ['alignmentTune', 'typographyTune'],
+                },
+                orderedList: {
+                    class: List,
+                    inlineToolbar: ['bold', 'italic', 'link', 'textColor'],
+                    config: { defaultStyle: 'ordered' },
                     tunes: ['alignmentTune', 'typographyTune'],
                 },
                 checklist: {
@@ -192,6 +199,12 @@ function Editor({ onChange }) {
                 return { text: '' };
             case 'header':
                 return { text: 'New Heading', level: 3 };
+            case 'list':
+                return { style: 'unordered', items: [''] };
+            case 'orderedList':
+                return { style: 'ordered', items: [''] };
+            case 'checklist':
+                return { items: [{ text: '', checked: false }] };
             case 'imageUrl':
                 return { url: '' };
             case 'video':
@@ -234,12 +247,11 @@ function Editor({ onChange }) {
           position: relative;
           min-height: 500px;
           transition: all 0.2s ease;
+          height: 100%;
         }
         
         .editor-wrapper.drag-over {
-          background: rgba(99, 102, 241, 0.05);
-          border: 2px dashed var(--accent-primary);
-          border-radius: var(--radius-lg);
+          background: rgba(59, 130, 246, 0.05);
         }
         
         .editor-holder {
@@ -264,12 +276,12 @@ function Editor({ onChange }) {
           align-items: center;
           gap: 8px;
           padding: 12px 20px;
-          background: var(--accent-primary);
+          background: #3b82f6;
           color: white;
-          border-radius: var(--radius-lg);
+          border-radius: 12px;
           font-size: 14px;
           font-weight: 500;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
           animation: pulse 1s ease-in-out infinite;
         }
         
