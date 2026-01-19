@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify';
+import { ALL_FONTS, WEB_SAFE_FONTS } from '../constants/googleFonts';
 
 const BODY_STYLE = 'margin:0;padding:0;background-color:#f3f4f6;';
 const TABLE_STYLE = 'width:100%;max-width:600px;margin:0 auto;border-spacing:0;border-collapse:collapse;background-color:#ffffff;';
@@ -174,10 +175,62 @@ export function renderEmailHTML({ blocks = [] }, settings = {}) {
         </table>
     `;
 
+    // Detect used fonts to inject Google Fonts link
+    const usedFonts = new Set();
+    const collectFont = (block) => {
+        // Check typography tune
+        const tuneFont = block?.tunes?.typographyTune?.fontFamily;
+        if (tuneFont) {
+            // Find the font object in our list to get the NAME (e.g., 'Roboto') from the value (e.g., '"Roboto", sans-serif')
+            // This is safer than regex parsing the value
+            const matchedFont = ALL_FONTS.find(f => f.val === tuneFont);
+            if (matchedFont) usedFonts.add(matchedFont.name);
+        }
+
+        // Check Link Tool
+        if (block.type === 'linkTool' && block.data?.style?.fontFamily) {
+             const matchedFont = ALL_FONTS.find(f => f.val === block.data.style.fontFamily);
+             if (matchedFont) usedFonts.add(matchedFont.name);
+        }
+
+        // Check nested content (rows, columns)
+        if (block.data && block.data.content && Array.isArray(block.data.content)) {
+            // Grid content
+            block.data.content.forEach(col => {
+                if (Array.isArray(col)) {
+                    col.forEach(item => {
+                        if (item.fontFamily) {
+                            const matchedFont = ALL_FONTS.find(f => f.val === item.fontFamily);
+                            if (matchedFont) usedFonts.add(matchedFont.name);
+                        }
+                        // Check for linkPreview within columns/rows which stores font in style.fontFamily
+                        if (item.type === 'linkPreview' && item.style?.fontFamily) {
+                             const matchedFont = ALL_FONTS.find(f => f.val === item.style.fontFamily);
+                             if (matchedFont) usedFonts.add(matchedFont.name);
+                        }
+                    });
+                }
+            });
+        }
+    };
+    blocks.forEach(collectFont);
+
+    // Filter out web-safe fonts and build URL
+    const googleFontsToLoad = Array.from(usedFonts).filter(fontName => {
+        return !WEB_SAFE_FONTS.some(ws => ws.name === fontName) && fontName !== 'Default';
+    });
+
+    let googleFontsLink = '';
+    if (googleFontsToLoad.length > 0) {
+        const families = googleFontsToLoad.map(name => `family=${name.replace(/\s+/g, '+')}:wght@400;700`).join('&');
+        googleFontsLink = `<link href="https://fonts.googleapis.com/css2?${families}&display=swap" rel="stylesheet">`;
+    }
+
     return `<!doctype html>
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${googleFontsLink}
         ${darkModeStyles}
       </head>
       <body style="${bodyStyle}">
@@ -421,7 +474,11 @@ function renderLinkPreview(data, block) {
         descFontSize: '14',
         imageRadius: '6',
         imageSize: '80',
-        imageFit: 'cover'
+        descFontSize: '14',
+        imageRadius: '6',
+        imageSize: '80',
+        imageFit: 'cover',
+        fontFamily: ''
     };
 
     const isColumn = s.display === 'column' || s.display === 'column-reverse';
@@ -478,8 +535,8 @@ function renderLinkPreview(data, block) {
             <tr>
                 <td style="${applyAlignmentStyle(`${TD_BASE} width:100%;`, block)}">
                   <a href="${href}" style="text-decoration:none;display:block;">
-                    <span style="display:block;margin:0 0 4px 0;font-family:Arial;font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
-                    ${description ? `<span style="display:block;margin:0;font-family:Arial;font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
+                    <span style="display:block;margin:0 0 4px 0;font-family:${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'Arial'};font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
+                    ${description ? `<span style="display:block;margin:0;font-family:${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'Arial'};font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
                   </a>
                 </td>
             </tr>
@@ -495,8 +552,8 @@ function renderLinkPreview(data, block) {
         // Horizontal Layout (Row)
         const contentCell = `<td style="${applyAlignmentStyle(`${TD_BASE} vertical-align:middle;`, block)}">
           <a href="${href}" style="text-decoration:none;display:block;">
-            <span style="display:block;margin:0 0 4px 0;font-family:Arial;font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
-            ${description ? `<span style="display:block;margin:0;font-family:Arial;font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
+            <span style="display:block;margin:0 0 4px 0;font-family:${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'Arial'};font-size:${s.titleFontSize}px;font-weight:bold;color:${s.titleColor};line-height:1.4;">${title}</span>
+            ${description ? `<span style="display:block;margin:0;font-family:${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'Arial'};font-size:${s.descFontSize}px;color:${s.descColor};line-height:1.4;">${description}</span>` : ''}
           </a>
         </td>`;
 

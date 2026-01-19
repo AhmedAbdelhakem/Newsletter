@@ -1,5 +1,6 @@
 
 const CONTENT_TYPES = ['text', 'button', 'image', 'link', 'linkPreview', 'row'];
+import { ALL_FONTS } from '../constants/googleFonts';
 
 const defaultState = {
   columns: 2,
@@ -386,8 +387,8 @@ export default class ColumnsBlock {
             : `padding:10px 12px 10px 0; flex-grow:1; min-width:0;`;
 
           content.innerHTML = `
-                <div style="font-weight:700; font-size:${s.titleFontSize}px; color:${s.titleColor}; margin-bottom:4px; line-height:1.3;">${item.meta.title || item.link}</div>
-                ${item.meta.description ? `<div style="font-size:${s.descFontSize}px; color:${s.descColor}; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; webkit-box-orient:vertical; overflow:hidden;">${item.meta.description}</div>` : ''}
+                <div style="font-weight:700; font-size:${s.titleFontSize}px; color:${s.titleColor}; margin-bottom:4px; line-height:1.3; font-family:${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'inherit'};">${item.meta.title || item.link}</div>
+                ${item.meta.description ? `<div style="font-size:${s.descFontSize}px; color:${s.descColor}; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; webkit-box-orient:vertical; overflow:hidden; font-family:${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'inherit'};">${item.meta.description}</div>` : ''}
              `;
           preview.appendChild(content);
 
@@ -447,6 +448,19 @@ export default class ColumnsBlock {
                 this.createColorInput('Desc', s.descColor, v => updateStyle('descColor', v)),
                 this.createRangeInput('Img Size', s.imageSize, 'px', 20, 300, v => updateStyle('imageSize', v))
               );
+
+              // Font Family Select (Full width)
+              const fontDiv = document.createElement('div');
+              fontDiv.style.cssText = 'margin-top:8px; display:flex; flex-direction:column; gap:4px;';
+
+              fontDiv.appendChild(
+                this.createSelectInput('Font Family', s.fontFamily || '',
+                  ALL_FONTS.map(f => ({ value: f.val, label: f.name })),
+                  v => updateStyle('fontFamily', v)
+                )
+              );
+              formContainer.appendChild(fontDiv);
+
               formContainer.appendChild(grid);
             }
           };

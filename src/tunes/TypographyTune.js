@@ -1,3 +1,4 @@
+import { ALL_FONTS } from '../constants/googleFonts';
 
 export default class TypographyTune {
     static get isTune() {
@@ -100,29 +101,19 @@ export default class TypographyTune {
         familySelect.style.minWidth = '120px';
         familySelect.title = 'Font Family';
 
-        const families = [
-            { name: 'Default', val: '' },
-            { name: 'Arial', val: 'Arial, Helvetica, sans-serif' },
-            { name: 'Verdana', val: 'Verdana, Geneva, sans-serif' },
-            { name: 'Times New Roman', val: '"Times New Roman", Times, serif' },
-            { name: 'Georgia', val: 'Georgia, serif' },
-            { name: 'Courier New', val: '"Courier New", Courier, monospace' },
-            { name: 'Impact', val: 'Impact, Charcoal, sans-serif' },
-            { name: 'Roboto', val: 'Roboto, Arial, sans-serif' },
-            { name: 'Red Hat Display', val: '"Red Hat Display", sans-serif' },
-            { name: 'Archivo', val: 'Archivo, sans-serif' },
-            { name: 'Comic Sans', val: '"Comic Sans MS", "Comic Sans", cursive' },
-        ];
-        families.forEach(f => {
+        ALL_FONTS.forEach(f => {
             const opt = document.createElement('option');
             opt.value = f.val;
             opt.text = f.name;
             if (this.data.fontFamily === f.val) opt.selected = true;
+            // Mark Google Fonts visually (optional, but helpful)
+            // if (!f.val.includes('Arial') && !f.val.includes('Verdana') && /* ... */) { ... }
             familySelect.appendChild(opt);
         });
 
         familySelect.addEventListener('change', (e) => {
             this.data.fontFamily = e.target.value;
+            this.loadFontIfNeeded(e.target.selectedOptions[0].text); // Pass the font NAME, not value
             this.applyStyles();
         });
 
@@ -162,6 +153,30 @@ export default class TypographyTune {
         wrapper.appendChild(colorWrapper);
 
         return wrapper;
+    }
+
+    /**
+     * Dynamically inject Google Fonts stylesheet if not present
+     */
+    loadFontIfNeeded(fontName) {
+        if (!fontName || fontName === 'Default') return;
+
+        // Check if it's a known Google Font by checking our list
+        const fontObj = ALL_FONTS.find(f => f.name === fontName);
+        if (!fontObj) return;
+
+        // Check against web-safe fonts to avoid unnecessary requests
+        const isWebSafe = ['Arial', 'Verdana', 'Times New Roman', 'Georgia', 'Courier New', 'Impact', 'Comic Sans'].includes(fontName);
+        if (isWebSafe) return;
+
+        const id = `google-font-${fontName.replace(/\s+/g, '-')}`;
+        if (!document.getElementById(id)) {
+            const link = document.createElement('link');
+            link.id = id;
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@400;700&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        }
     }
 
     save() {

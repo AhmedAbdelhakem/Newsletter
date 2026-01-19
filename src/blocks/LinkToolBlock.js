@@ -1,3 +1,5 @@
+import { ALL_FONTS } from '../constants/googleFonts';
+
 export default class LinkToolBlock {
     static get toolbox() {
         return {
@@ -16,13 +18,14 @@ export default class LinkToolBlock {
                 borderColor: '#e1e3e6',
                 borderRadius: '6',
                 borderWidth: '1',
-                padding: '0',
+                padding: '10',
                 titleColor: '#111827',
-                titleFontSize: '16',
+                titleFontSize: '14',
                 descColor: '#6b7280',
-                descFontSize: '14',
+                descFontSize: '12',
                 imageRadius: '6',
-                imageSize: '80'
+                imageSize: '80',
+                fontFamily: '' // Default font
             }
         };
         this.api = api;
@@ -255,6 +258,44 @@ export default class LinkToolBlock {
                 createStyleInput('Desc Color', 'descColor', 'color'),
                 createStyleInput('Image Size (px)', 'imageSize', 'number')
             );
+
+            // Font Family Select
+            const fontDiv = document.createElement('div');
+            fontDiv.style.marginBottom = '10px';
+            fontDiv.style.gridColumn = 'span 2';
+
+            const fontLabel = document.createElement('label');
+            fontLabel.textContent = 'Font Family';
+            fontLabel.style.fontSize = '11px';
+            fontLabel.style.color = '#6b7280';
+            fontLabel.style.display = 'block';
+            fontLabel.style.marginBottom = '2px';
+            fontLabel.style.fontFamily = 'Red Hat Display, sans-serif';
+
+            const fontSelect = document.createElement('select');
+            fontSelect.style.width = '100%';
+            fontSelect.style.padding = '6px';
+            fontSelect.style.border = '1px solid #e5e7eb';
+            fontSelect.style.borderRadius = '4px';
+            fontSelect.style.fontFamily = 'Red Hat Display, sans-serif';
+
+            ALL_FONTS.forEach(f => {
+                const option = document.createElement('option');
+                option.value = f.val;
+                option.textContent = f.name;
+                if (this.data.style.fontFamily === f.val) {
+                    option.selected = true;
+                }
+                fontSelect.appendChild(option);
+            });
+
+            fontSelect.onchange = (e) => {
+                this.data.style.fontFamily = e.target.value;
+            };
+
+            fontDiv.append(fontLabel, fontSelect);
+            grid.append(fontDiv);
+
             this.wrapper.append(grid);
         }
 
@@ -334,11 +375,11 @@ export default class LinkToolBlock {
         const content = `
         <div style="${contentStyle}">
             <a href="${data.link}" target="_blank" style="text-decoration: none; display: block;">
-                <div style="font-weight: 700; font-size: ${s.titleFontSize}px; color: ${s.titleColor}; margin-bottom: 4px; line-height: 1.4;">
+                <div style="font-weight: 700; font-size: ${s.titleFontSize}px; color: ${s.titleColor}; margin-bottom: 4px; line-height: 1.4; font-family: ${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'inherit'};">
                     ${data.meta.title || data.link}
                 </div>
                 ${data.meta.description ? `
-                <div style="font-size: ${s.descFontSize}px; color: ${s.descColor}; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                <div style="font-size: ${s.descFontSize}px; color: ${s.descColor}; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-family: ${s.fontFamily ? s.fontFamily.replace(/"/g, "'") : 'inherit'};">
                     ${data.meta.description}
                 </div>` : ''}
             </a>

@@ -5,6 +5,7 @@ import Preview from './components/Preview';
 import BlockPalette from './components/BlockPalette';
 import PageSettings from './components/PageSettings';
 import SendTestModal from './components/SendTestModal';
+import Toast from './components/Toast';
 import { renderEmailHTML } from './utils/emailRenderer';
 
 function App() {
@@ -101,7 +102,6 @@ function App() {
     localStorage.setItem('newsletterDraft', JSON.stringify(editorData));
     localStorage.setItem('newsletterSettings', JSON.stringify(pageSettings));
     setStatus('Saved!');
-    setTimeout(() => setStatus(''), 3000);
   }, [editorData, pageSettings]);
 
   const handlePreview = useCallback(() => {
@@ -120,15 +120,13 @@ function App() {
     a.download = `newsletter-${Date.now()}.html`;
     a.click();
     URL.revokeObjectURL(url);
-    setStatus('Exported!');
-    setTimeout(() => setStatus(''), 3000);
+    setStatus('Exported HTML!');
   }, [editorData, pageSettings]);
 
   const handleCopy = useCallback(() => {
     const html = renderEmailHTML(editorData, pageSettings);
     navigator.clipboard.writeText(html).then(() => {
-      setStatus('Copied!');
-      setTimeout(() => setStatus(''), 3000);
+      setStatus('Copied HTML!');
     });
   }, [editorData, pageSettings]);
 
@@ -237,6 +235,10 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {status && (
+        <Toast message={status} onClose={() => setStatus('')} />
       )}
     </div>
 
