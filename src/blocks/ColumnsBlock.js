@@ -137,7 +137,7 @@ export default class ColumnsBlock {
 
     const renderEditors = () => {
       colsContainer.innerHTML = '';
-      colsContainer.style.gridTemplateColumns = `repeat(${this.data.columns}, minmax(0, 1fr))`;
+      colsContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(250px, 1fr))`;
 
       this.data.content.forEach((column, colIndex) => {
         this.renderColumn(colIndex, column, colsContainer);
@@ -577,7 +577,7 @@ export default class ColumnsBlock {
 
         const renderNestedColumns = () => {
           nestedGrid.innerHTML = '';
-          nestedGrid.style.gridTemplateColumns = `repeat(${item.columns}, minmax(0, 1fr))`;
+          nestedGrid.style.gridTemplateColumns = `repeat(auto-fit, minmax(250px, 1fr))`;
           // Update preview styles
           nestedGrid.style.backgroundImage = item.backgroundImage ? `url('${item.backgroundImage}')` : 'none';
           nestedGrid.style.backgroundSize = item.backgroundSize || 'cover';
