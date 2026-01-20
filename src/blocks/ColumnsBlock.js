@@ -372,7 +372,9 @@ export default class ColumnsBlock {
 
             if (isColumn) {
               imgWrapper.style.cssText = `width:100%; margin-bottom:12px;`;
-              imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; border-radius:${s.imageRadius}px; display:block;">`;
+              // Use imageSize for height if provided, otherwise default to 16/9 aspect ratio
+              const heightStyle = s.imageSize ? `height:${s.imageSize}px` : 'height:auto; aspect-ratio:16/9';
+              imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; ${heightStyle}; object-fit:cover; border-radius:${s.imageRadius}px; display:block;">`;
             } else {
               imgWrapper.style.cssText = `width:${imgSize}; height:${imgSize}; flex-shrink:0; background:#f4f5f7; margin:10px; border-radius:${s.imageRadius}px; overflow:hidden;`;
               imgWrapper.innerHTML = `<img src="${item.meta.image.url}" style="width:100%; height:100%; object-fit:cover;">`;
@@ -446,7 +448,7 @@ export default class ColumnsBlock {
                 this.createColorInput('Title', s.titleColor, v => updateStyle('titleColor', v)),
                 this.createRangeInput('Desc Sz', s.descFontSize, 'px', 10, 24, v => updateStyle('descFontSize', v)),
                 this.createColorInput('Desc', s.descColor, v => updateStyle('descColor', v)),
-                this.createRangeInput('Img Size', s.imageSize, 'px', 20, 300, v => updateStyle('imageSize', v))
+                this.createRangeInput('Img Size', s.imageSize, 'px', 20, 600, v => updateStyle('imageSize', v))
               );
 
               // Font Family Select (Full width)

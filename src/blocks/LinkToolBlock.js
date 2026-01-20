@@ -352,8 +352,9 @@ export default class LinkToolBlock {
         if (data.meta.image && data.meta.image.url) {
             const imgSize = s.imageSize ? `${s.imageSize}px` : (isColumn ? '100%' : '80px');
 
+            const heightStyle = s.imageSize ? `height: ${s.imageSize}px` : 'height: auto; aspect-ratio: 16/9';
             const imgStyle = isColumn
-                ? `width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: ${s.imageRadius}px; display: block;`
+                ? `width: 100%; ${heightStyle}; object-fit: cover; border-radius: ${s.imageRadius}px; display: block;`
                 : `width: 100%; height: 100%; object-fit: cover;`;
 
             const wrapperStyle = isColumn

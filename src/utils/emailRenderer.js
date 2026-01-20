@@ -189,8 +189,8 @@ export function renderEmailHTML({ blocks = [] }, settings = {}) {
 
         // Check Link Tool
         if (block.type === 'linkTool' && block.data?.style?.fontFamily) {
-             const matchedFont = ALL_FONTS.find(f => f.val === block.data.style.fontFamily);
-             if (matchedFont) usedFonts.add(matchedFont.name);
+            const matchedFont = ALL_FONTS.find(f => f.val === block.data.style.fontFamily);
+            if (matchedFont) usedFonts.add(matchedFont.name);
         }
 
         // Check nested content (rows, columns)
@@ -205,8 +205,8 @@ export function renderEmailHTML({ blocks = [] }, settings = {}) {
                         }
                         // Check for linkPreview within columns/rows which stores font in style.fontFamily
                         if (item.type === 'linkPreview' && item.style?.fontFamily) {
-                             const matchedFont = ALL_FONTS.find(f => f.val === item.style.fontFamily);
-                             if (matchedFont) usedFonts.add(matchedFont.name);
+                            const matchedFont = ALL_FONTS.find(f => f.val === item.style.fontFamily);
+                            if (matchedFont) usedFonts.add(matchedFont.name);
                         }
                     });
                 }
@@ -501,15 +501,16 @@ function renderLinkPreview(data, block) {
     // Image Component
     let imgComponent = '';
     if (imageUrl) {
-        // Use user defined fit or default to 'contain'
+        // Use user defined fit or default to 'cover'
         const objFit = s.imageFit || 'cover';
 
         if (isColumn) {
             // Full width image
+            const heightStyle = s.imageSize ? `height:${s.imageSize}px` : 'height:auto;aspect-ratio:16/9';
             imgComponent = `
                 <tr>
                     <td style="width:100%;padding:0 0 12px 0;">
-                         <img src="${convertSvgToPng(imageUrl)}" alt="" style="display:block;width:100%;height:auto;object-fit:${objFit};border-radius:${s.imageRadius}px;border:0;">
+                         <img src="${convertSvgToPng(imageUrl)}" alt="" style="display:block;width:100%;${heightStyle};object-fit:${objFit};border-radius:${s.imageRadius}px;border:0;">
                     </td>
                 </tr>
             `;
