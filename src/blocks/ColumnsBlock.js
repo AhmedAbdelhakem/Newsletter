@@ -1,5 +1,5 @@
+const CONTENT_TYPES = ['text', 'heading', 'list', 'checklist', 'button', 'image', 'video', 'link', 'linkPreview', 'divider', 'spacer', 'row'];
 
-const CONTENT_TYPES = ['text', 'button', 'image', 'link', 'linkPreview', 'row'];
 import { ALL_FONTS } from '../constants/googleFonts';
 
 const defaultState = {
@@ -283,6 +283,72 @@ export default class ColumnsBlock {
         typoControls.appendChild(colorWrapper);
 
         container.appendChild(typoControls);
+        break;
+
+      case 'heading':
+        container.append(
+          this.createInput('Text', 'text', item.text || 'Heading', v => update('text', v)),
+          this.createSelectInput('Level', item.level || 2, [
+            { value: 1, label: 'H1' }, { value: 2, label: 'H2' }, { value: 3, label: 'H3' },
+            { value: 4, label: 'H4' }, { value: 5, label: 'H5' }, { value: 6, label: 'H6' }
+          ], v => update('level', parseInt(v))),
+          this.createSelectInput('Align', item.align || 'left', [
+            { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }
+          ], v => update('align', v)),
+          this.createColorInput('Color', item.color || '#111827', v => update('color', v))
+        );
+        break;
+
+      case 'list':
+      case 'checklist':
+        const isChecklist = item.type === 'checklist';
+        const listItems = Array.isArray(item.items) ? item.items.map(i => typeof i === 'string' ? i : i.text).join('\n') : '';
+
+        const listTextarea = document.createElement('textarea');
+        listTextarea.value = listItems;
+        listTextarea.placeholder = 'Item 1\nItem 2\nItem 3';
+        listTextarea.style.cssText = 'width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #e5e7eb; border-radius: 6px; font-family: inherit; min-height: 80px; resize: vertical;';
+        listTextarea.addEventListener('input', e => {
+          const lines = e.target.value.split('\n').filter(line => line.trim() !== '');
+          if (isChecklist) {
+            const newItems = lines.map(text => ({ text, checked: false }));
+            update('items', newItems);
+          } else {
+            update('items', lines);
+          }
+        });
+
+        container.appendChild(listTextarea);
+
+        if (!isChecklist) {
+          container.appendChild(
+            this.createSelectInput('Style', item.style || 'unordered', [
+              { value: 'unordered', label: 'Unordered (Bullets)' },
+              { value: 'ordered', label: 'Ordered (Numbers)' }
+            ], v => update('style', v))
+          );
+        }
+        break;
+
+      case 'video':
+        container.append(
+          this.createInput('Video URL (YouTube/mp4)', 'url', item.url || '', v => update('url', v)),
+          this.createInput('Poster Image URL (Optional)', 'url', item.posterUrl || '', v => update('posterUrl', v))
+        );
+        break;
+
+      case 'divider':
+        container.append(
+          this.createColorInput('Color', item.color || '#e5e7eb', v => update('color', v)),
+          this.createRangeInput('Thickness', item.thickness || 1, 'px', 1, 10, v => update('thickness', v)),
+          this.createRangeInput('Margin Y', item.paddingY || 20, 'px', 0, 60, v => update('paddingY', v))
+        );
+        break;
+
+      case 'spacer':
+        container.append(
+          this.createRangeInput('Height', item.height || 32, 'px', 10, 200, v => update('height', v))
+        );
         break;
 
       case 'linkPreview':
@@ -813,10 +879,16 @@ export default class ColumnsBlock {
   getTypeIcon(type) {
     const icons = {
       text: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>',
+      heading: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h12"/><path d="M6 20V4"/><path d="M18 20V4"/></svg>',
+      list: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+      checklist: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
       button: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="8" rx="2"/></svg>',
       image: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+      video: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
       link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-      linkPreview: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>', // Placeholder icon, maybe similar to linkTool
+      linkPreview: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>',
+      divider: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/></svg>',
+      spacer: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>',
       row: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>'
     };
     return icons[type] || '';
@@ -826,6 +898,18 @@ export default class ColumnsBlock {
     switch (type) {
       case 'text':
         return { type: 'text', value: '' };
+      case 'heading':
+        return { type: 'heading', text: 'Heading', level: 2, align: 'left', color: '#111827' };
+      case 'list':
+        return { type: 'list', style: 'unordered', items: ['Item 1', 'Item 2'] };
+      case 'checklist':
+        return { type: 'checklist', items: [{ text: 'Task 1', checked: false }, { text: 'Task 2', checked: false }] };
+      case 'video':
+        return { type: 'video', url: '', posterUrl: '' };
+      case 'divider':
+        return { type: 'divider', color: '#e5e7eb', thickness: '1', paddingY: '20' };
+      case 'spacer':
+        return { type: 'spacer', height: '32' };
       case 'row':
         return {
           type: 'row',
@@ -875,7 +959,8 @@ export default class ColumnsBlock {
             titleFontSize: '14',
             descColor: '#6b7280',
             descFontSize: '12',
-            imageRadius: '6'
+            imageRadius: '6',
+            imageFit: 'cover'
           }
         };
       default:

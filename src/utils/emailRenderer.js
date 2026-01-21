@@ -301,6 +301,53 @@ function renderList({ style = 'unordered', items = [], meta = {} }) {
     return `<${tag}${attrs} style="padding-left:20px;margin:0;list-style-type:${listStyleType};list-style-position:inside;">${listItems}</${tag}>`
 }
 
+function renderVideoHtml(data) {
+    const width = data.width || '100';
+    const borderRadius = data.borderRadius || '0';
+    const border = data.border || 'none';
+    const shadow = data.shadow || 'none';
+    const alt = sanitize(data.alt || 'Video');
+
+    // Check for video file extensions
+    const isVideo = ['.mp4', '.webm', '.ogg', '.mov'].some(ext => (data.url || '').toLowerCase().endsWith(ext));
+
+    if (isVideo) {
+        const autoplay = data.autoPlay ? 'autoplay' : '';
+        const loop = data.loop ? 'loop' : '';
+        const muted = data.muted ? 'muted' : '';
+        const controls = 'controls'; // Always include controls as fallback
+
+        const posterUrl = data.posterUrl || '';
+        const fallbackImg = posterUrl
+            ? `<img src="${posterUrl}" alt="${alt}" style="display:block;width:100%;height:auto;border-radius:${borderRadius}px;">`
+            : `<span style="color:#666;font-family:Arial,sans-serif;">Video: ${alt}</span>`;
+
+        return `<video width="${width}%" style="display:block;max-width:100%;height:auto;border-radius:${borderRadius}px;border:${border};box-shadow:${shadow};" ${autoplay} ${loop} ${muted} ${controls} poster="${posterUrl}">
+            <source src="${data.url}" type="video/${data.url.split('.').pop()}">
+            ${fallbackImg}
+        </video>`;
+    } else {
+        // Check for YouTube URL
+        const getYouTubeId = (url) => {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url?.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        };
+        const youtubeId = getYouTubeId(data.url);
+
+        if (youtubeId) {
+            const thumbnailUrl = data.posterUrl || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+            return `
+                <a href="${data.url}" target="_blank" style="display:block;text-decoration:none;">
+                    <img src="${thumbnailUrl}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">
+                </a>
+            `;
+        } else {
+            return `<img src="${data.url}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">`;
+        }
+    }
+}
+
 function renderColumnItem(item) {
     if (typeof item === 'string') {
         return `<p style="margin:0 0 12px 0;font-family:Arial;font-size:15px;line-height:1.6;color:#1f2937;">${sanitize(item)}</p>`;
@@ -347,6 +394,47 @@ function renderColumnItem(item) {
             const linkUrl = item.url || '#';
             const linkColor = item.color || '#6366f1';
             return `<div style="margin:0 0 12px 0;"><a href="${linkUrl}" style="font-family:Arial;font-size:15px;color:${linkColor};text-decoration:underline;">${linkText}</a></div>`;
+
+        case 'heading':
+            const level = item.level || 2;
+            const fontSize = headerSize(level);
+            const align = item.align || 'left';
+            const color = item.color || '#111827';
+            return `<h${level} style="margin:0 0 12px 0;font-family:Arial;font-size:${fontSize};font-weight:bold;color:${color};text-align:${align};line-height:1.3;">${sanitize(item.text)}</h${level}>`;
+
+        case 'list':
+            return `<div style="margin:0 0 12px 0;">${renderList({ style: item.style, items: item.items })}</div>`;
+
+        case 'checklist':
+            const items = item.items || [];
+            if (!Array.isArray(items)) return '';
+            const checklistHtml = items.map(i => {
+                // Determine if it looks like {text:..., checked:...} or just string
+                const checked = typeof i === 'object' ? i.checked : false;
+                const text = sanitize(typeof i === 'object' ? i.text : i);
+                const icon = checked
+                    ? `<span style="display:inline-block;width:16px;height:16px;background:#2563eb;border:2px solid #2563eb;border-radius:4px;color:white;text-align:center;line-height:14px;font-size:12px;">✓</span>`
+                    : `<span style="display:inline-block;width:16px;height:16px;background:white;border:2px solid #d1d5db;border-radius:4px;"></span>`;
+
+                return `<div style="margin-bottom:8px;display:flex;align-items:start;">
+               <div style="flex-shrink:0;margin-right:12px;padding-top:2px;">${icon}</div>
+               <div style="flex-grow:1;line-height:1.6;">${text}</div>
+            </div>`;
+            }).join('');
+            return `<div style="margin:0 0 12px 0;">${checklistHtml}</div>`;
+
+        case 'video':
+            // Reuse video rendering logic
+            return `<div style="margin:0 0 12px 0;">${renderVideoHtml(item)}</div>`;
+
+        case 'divider':
+            const thick = item.thickness || 1;
+            const col = item.color || '#e5e7eb';
+            const my = item.paddingY || 20;
+            return `<div style="padding:${my}px 0;"><hr style="border:none;border-top:${thick}px solid ${col};margin:0;"></div>`;
+
+        case 'spacer':
+            return `<div style="height:${item.height || 32}px;"></div>`;
 
         case 'linkPreview':
             // Re-use renderLinkPreview. It uses block for alignment but we can pass null or mimic needed props if necessary.
@@ -621,52 +709,7 @@ const blockRenderers = {
         const alignment = data.alignment || 'center';
         const alt = sanitize(data.alt || 'Video');
 
-        // Check for video file extensions
-        const isVideo = ['.mp4', '.webm', '.ogg', '.mov'].some(ext => (data.url || '').toLowerCase().endsWith(ext));
-
-        let content;
-        if (isVideo) {
-            const autoplay = data.autoPlay ? 'autoplay' : '';
-            const loop = data.loop ? 'loop' : '';
-            const muted = data.muted ? 'muted' : '';
-            const controls = 'controls'; // Always include controls as fallback
-
-            // Use posterUrl as fallback image for email clients that strip video tags (Gmail, Outlook)
-            // If no poster is provided, we can't show a meaningful fallback
-            const posterUrl = data.posterUrl || '';
-            const fallbackImg = posterUrl
-                ? `<img src="${posterUrl}" alt="${alt}" style="display:block;width:100%;height:auto;border-radius:${borderRadius}px;">`
-                : `<span style="color:#666;font-family:Arial,sans-serif;">Video: ${alt}</span>`;
-
-            content = `<video width="${width}%" style="display:block;max-width:100%;height:auto;border-radius:${borderRadius}px;border:${border};box-shadow:${shadow};" ${autoplay} ${loop} ${muted} ${controls} poster="${posterUrl}">
-                <source src="${data.url}" type="video/${data.url.split('.').pop()}">
-                ${fallbackImg}
-            </video>`;
-        } else {
-            // Check for YouTube URL
-            const getYouTubeId = (url) => {
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-                const match = url?.match(regExp);
-                return (match && match[2].length === 11) ? match[2] : null;
-            };
-            const youtubeId = getYouTubeId(data.url);
-
-            if (youtubeId) {
-                // YouTube: Render as clickable thumbnail link (Best practice for email)
-                // Matches user request: <a href="..."><img src="..." /></a>
-                const thumbnailUrl = data.posterUrl || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
-
-                content = `
-                    <a href="${data.url}" target="_blank" style="display:block;text-decoration:none;">
-                        <img src="${thumbnailUrl}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">
-                    </a>
-                `;
-            } else {
-                // Regular image/SVG/GIF
-                content = `<img src="${data.url}" alt="${alt}" style="display:block;width:${width}%;max-width:100%;height:auto;border:${border};border-radius:${borderRadius}px;box-shadow:${shadow};">`;
-            }
-        }
-
+        const content = renderVideoHtml(data);
         return wrapRow(`<table role="presentation" width="100%"><tr><td align="${alignment}" style="${TD_BASE} padding:16px 24px;">${content}</td></tr></table>`);
     },
     button: block => {
