@@ -17,6 +17,7 @@ import DividerBlock from '../blocks/DividerBlock';
 import SpacerBlock from '../blocks/SpacerBlock';
 import ColumnsBlock from '../blocks/ColumnsBlock';
 import LinkToolBlock from '../blocks/LinkToolBlock';
+import CustomLink from '../tools/CustomLink';
 import AlignmentTune from '../tunes/AlignmentTune';
 import TypographyTune from '../tunes/TypographyTune';
 
@@ -111,6 +112,9 @@ const Editor = forwardRef(({ onChange }, ref) => {
                 },
                 linkTool: {
                     class: LinkToolBlock,
+                },
+                link: {
+                    class: CustomLink,
                 },
                 alignmentTune: {
                     class: AlignmentTune,
